@@ -1,0 +1,11 @@
+**__pycache__/
+**.xml
+**.json
+**.env
+_test_request.py
+
+**.vscode/
+**.pdf
+
+Region_ERIS.py
+request_eris.py
