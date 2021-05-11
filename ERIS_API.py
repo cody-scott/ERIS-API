@@ -61,7 +61,7 @@ class ERISAPI(object):
 
         check_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
         expire_time = datetime.datetime.strptime(expire_time, "%Y-%m-%dT%H:%M:%S.%f")
-        is_valid = True if expire_time<check_time else False
+        is_valid = True if expire_time>check_time else False
         return is_valid
 
     def request_api_data(self, request_parameters):
