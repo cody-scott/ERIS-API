@@ -109,7 +109,7 @@ class ERISAPI(object):
                 timeout=self.timeout,
             )
             assert result.status_code == 200, "Status Code failed"
-            return result.content()
+            return result.text
         except AssertionError as e:
             logging.error(e)
 
