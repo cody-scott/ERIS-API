@@ -90,7 +90,7 @@ class ERISAPI(object):
 
         _status = result_json.get("status")
         _message = result_json.get("message", "General Authentication Error")
-        assert _status == 200, _message
+        assert _status == 200, f"status: {_status} - message: {_message}"
 
         _access_token = result_json.get("access-token")
         self.token_contents = _access_token
@@ -138,7 +138,10 @@ class ERISAPI(object):
             )
             assert result.status_code == 200, "Failed to reach API"
             result_json = result.json()
-            assert result_json.get('status') == 200, result_json.get("message", "Generic error with data request")
+            _status = result_json.get('status')
+            _message = result_json.get("message", "Generic error with data request")
+            assert _status == 200, f"status: {_status} - message: {_message}"
+            
             return result.json()
         except AssertionError as e:
             logging.error(e)
