@@ -5,11 +5,51 @@ import json
 
 from urllib.parse import urlparse, unquote, parse_qs
 
+class ERIS_Tag(object):
+    def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
+        self.label = label
+        self.tag = tag
+        self.mode = mode
+        self.interval = interval
+
+    def tag_to_string(self):
+        vals = [_ for _ in [
+            self.label,
+            self.tag,
+            self.mode,
+            self.interval
+        ] if _ is not None]
+
+        return ":".join(vals)
+
+    def __str__(self) -> str:
+        lbl = f"Label: {self.label}" if self.label is not None else None
+        tag = f"Tag: {self.tag}"
+        mode = f"Mode: {self.mode}"
+        interval = f"Interval: {self.interval}"
+        vals = [_ for _ in [lbl, tag, mode, interval] if _ is not None]
+        return "\n".join(vals)
+
+    def __iter__(self):
+        zip_list = zip(["label", "tag","mode","interval"], [self.label, self.tag, self.mode, self.interval])
+        for key, val in zip_list:
+            yield (key, val)
+
+
+class ERIS_Request(object):
+    def __init__(self, start_time, end_time, tags) -> None:
+        self.start = start_time
+        self.end = end_time
+        self.tags = tags if type(tags) is list else [tags]
+        
+
 class ERISAPI(object):
     def __init__(self, base_url, username, password, timeout=None) -> None:
         super().__init__()
 
         self.base_url = base_url
+        self.base_url += "" if self.base_url.endswith("/") else "/"
+
         self.base_esrm_url = self.base_url+"esrm/rest"
         self.base_api_url = self.base_url+"api/rest"
         self.authenticate_url = "/auth/login"
@@ -113,20 +153,14 @@ class ERISAPI(object):
         except AssertionError as e:
             logging.error(e)
 
-    def _construct_request_parameters(self, tag_list):
-        _start = tag_list.get(
-            "start", 
-            datetime.datetime.now()-datetime.timedelta(days=1)
-        )
-        _end = tag_list.get(
-            "end",
-            "P1D"
-        )
+    def _construct_request_parameters(self, tag_class):
+        _start = tag_class.start
+        _end = tag_class.end
 
         dt_format = "%Y-%m-%dT%H:%M:%S"
         _start = _start.strftime(dt_format) if type(_start) is datetime.datetime else _start
         _end = _end.strftime(dt_format) if type(_end) is datetime.datetime else _end
-        _tags = ",".join([":".join(_) for _ in tag_list.get('tags', [])])
+        _tags = ",".join([_.tag_to_string() for _ in tag_class.tags])
 
         return {"start": _start, "end": _end, "tags": _tags}
 
@@ -143,16 +177,24 @@ def extract_tags_from_url(url):
     et = qs_content.get("end")
 
     tags = qs_content.get("tags")
-    tags = tags[0]
-    tag_list = [_.split(":") for _ in tags.split(",")]
+    tags = tags[0].split(",")
+
+    tag_classes = [_parse_tag(_.split(":")) for _ in tags]
+
 
     result = json.dumps(
         {
             "start": st,
             "end": et,
-            "tags": tag_list
+            "tags": [dict(_) for _ in tag_classes]
         },
         indent=4
     )
 
     return result
+
+def _parse_tag(_tag):
+    if len(_tag) == 3:
+        return ERIS_Tag(None, *_tag)
+    else:
+        return ERIS_Tag(*_tag)
