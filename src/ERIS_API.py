@@ -44,20 +44,22 @@ class ERIS_Request(object):
         
 
 class ERISAPI(object):
-    def __init__(self, base_url, username, password, timeout=None) -> None:
+    def __init__(self, base_url, username, password, client_id, timeout=None):
         super().__init__()
 
         self.base_url = base_url
-        self.base_url += "" if self.base_url.endswith("/") else "/"
+        self.base_url = base_url[:-1] if self.base_url.endswith("/") else base_url
 
-        self.base_esrm_url = self.base_url+"esrm/rest"
-        self.base_api_url = self.base_url+"api/rest"
+        self.base_esrm_url = self.base_url+"/esrm/rest"
+        # self.base_api_url = self.base_url+"/api/rest"
+        self.base_api_url = self.base_url+"/api/rest"
         self.authenticate_url = "/auth/login"
         self.data_url = "/tag/data"
 
         self.timeout = 1800 if timeout is None else timeout
 
         self.access_token = None
+        self.client_id = client_id
 
         self.username = username
         self.password = password
@@ -71,17 +73,19 @@ class ERISAPI(object):
         if self._current_token_valid():
             return self.access_token.get("x-access-token")
 
-        auth_uri = self.base_url + self.authenticate_url
+        auth_uri = self.base_api_url + self.authenticate_url
 
         result = requests.post(
-            auth_uri, auth=(self.username, self.password)
+            auth_uri, auth=(self.username, self.password), headers={"x-client-id": self.client_id}
         )
-        assert result.status_code == 200, "Failed to reach authentication page"
+
         # result = requests.post(
         #     auth_uri, 
-        #     json={"userId": self.username, "password": self.password}
+        #     json={"userId": self.username, "password": self.password},
+        #     headers={"x-client-id": self.client_id}
         # )
 
+        assert result.status_code == 200, "Failed to reach authentication page"
         result_json = result.json()
 
         _status = result_json.get("status")
@@ -127,7 +131,10 @@ class ERISAPI(object):
                 uri, 
                 params=params, 
                 timeout=self.timeout,
-                headers={"x-access-token": access_token}
+                headers={
+                    "x-access-token": access_token,
+                    "x-client-id": self.client_id
+                }
             )
             assert result.status_code == 200, "Failed to reach API"
             result_json = result.json()

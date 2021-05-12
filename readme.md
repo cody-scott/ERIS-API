@@ -5,6 +5,7 @@ Package to wrap the ERIS API.
 
 Intended use is to simplify requesting data from ERIS.
 
+To proceed the user must be added to the API group and you must also know the client ID of the group.
 
 ## Usage
 
@@ -14,6 +15,7 @@ Basic flow is as follows. Example is also below:
     1. URL to ERIS. Include the trailing slash "https://www.eris.com/"
     1. Username
     1. Password
+    1. Client ID
 
 2. Build Tag list
     1. Each tag should be an instance of the ERIS_Tag class
