@@ -11,3 +11,5 @@ Region_ERIS.py
 request_eris.py
 
 **docs/
+
+**.egg-info/

@@ -11,13 +11,19 @@ class _Generic_Response(object):
     def to_json(self, indent=None):
         indent = 4 if indent is None else indent
         assert self.tag_data is not None, "Run processes response before trying to export to json"
-        json.dumps(self.tag_data, indent=indent)
+        return json.dumps(self.tag_data, indent=indent)
 
-    def convert_tags_to_dataframes(self):
-        """Convert all internal tag data to individual data frames
+    def convert_tags_to_dataframes(self, concat=None):
+        """Convert all internal tag data to individual data frames using 'description'
+
+        If concat is True, then it will concatenate it to a single dataframe as the return.
+        Default is to concatenate the dataframes.
         """
+        concat = True if concat is None else concat
         for tag in self.tag_data:
             self.tag_to_dataframe(tag)
+        result = pd.concat(self.tag_dataframes) if concat == True else self.tag_dataframes
+        return result
 
     def tag_to_dataframe(self, tag, tag_label=None, custom_label=None) -> pd.Series:
         """Convert a tag to a pandas data frame of the format 
@@ -57,8 +63,9 @@ class XML_Response(_Generic_Response):
         """
         super().__init__()
         self.response_content = response_content
+        self._process_response()
 
-    def process_response(self):
+    def _process_response(self):
         eris_tree = ET.fromstring(self.response_content)
 
         tag_data = []
@@ -82,7 +89,7 @@ class XML_Response(_Generic_Response):
             'description': None,
             'engUnits': None,
             'sampleInterval': None,
-            'sampleMode': None,
+            'samplingMode': None,
             'data': []
         }
         for row in tag_xml:
@@ -105,4 +112,7 @@ class XML_Response(_Generic_Response):
         return [attribs['time'], attribs['source'], attribs['value']]
 
 class JSON_Response(_Generic_Response):
+    """Waiting for valid response to complete this.
+    Likely will share many similarities, hence the _Generic_Response usage
+    """
     pass
