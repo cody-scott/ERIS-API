@@ -5,6 +5,8 @@ import json
 
 from urllib.parse import urlparse, unquote, parse_qs
 
+from ERIS_Responses import XML_Response, JSON_Response
+
 class ERIS_Tag(object):
     def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
         self.label = label
@@ -159,7 +161,7 @@ class ERISAPI(object):
                 timeout=self.timeout,
             )
             assert result.status_code == 200, "Status Code failed"
-            return result.text
+            return XML_Response(result.text)
         except AssertionError as e:
             logging.error(e)
 
@@ -173,7 +175,6 @@ class ERISAPI(object):
         _tags = ",".join([_.tag_to_string() for _ in tag_class.tags])
 
         return {"start": _start, "end": _end, "tags": _tags}
-
 
 def extract_tags_from_url(url):
     """Return the components of the requested url. This is normally obtained via the Source link at the bottom of a request.
