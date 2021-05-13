@@ -45,7 +45,7 @@ request_class = ERIS_Request(
     tags=input_tags
 )
 
-api = ERISAPI("https://www.eris.com/", "USERNAME", "PASSWORD")
+api = ERISAPI("https://www.eris.com/", "USERNAME", "PASSWORD", "CLIENT_ID")
 result = api.request_api_data(request_class)
 ```
 
