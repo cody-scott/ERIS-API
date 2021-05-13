@@ -2,10 +2,11 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 import json
 
-class _Generic_Response(object):
-    def __init__(self) -> None:
+class ERIS_Response(object):
+    def __init__(self, type_response_class) -> None:
         super().__init__()
-        self.tag_data = None
+        self.tag_data = type_response_class.tag_data
+        self.response_content = type_response_class.response_content
         self.tag_dataframes = []
 
     def to_json(self, indent=None):
@@ -45,7 +46,7 @@ class _Generic_Response(object):
         return df
 
 
-class XML_Response(_Generic_Response):
+class XML_Response(object):
     """XML Response object from an eris query.
 
     Flow is intiate response, process the response.
@@ -63,8 +64,9 @@ class XML_Response(_Generic_Response):
         """
         super().__init__()
         self.response_content = response_content
+        self.tag_data = None
         self._process_response()
-
+        
     def _process_response(self):
         eris_tree = ET.fromstring(self.response_content)
 
@@ -111,7 +113,7 @@ class XML_Response(_Generic_Response):
         attribs = data_val.attrib
         return [attribs['time'], attribs['source'], attribs['value']]
 
-class JSON_Response(_Generic_Response):
+class JSON_Response(object):
     """Waiting for valid response to complete this.
     Likely will share many similarities, hence the _Generic_Response usage
     """

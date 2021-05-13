@@ -5,7 +5,7 @@ import json
 
 from urllib.parse import urlparse, unquote, parse_qs
 
-from ERIS_Responses import XML_Response, JSON_Response
+from ERIS_Responses import XML_Response, JSON_Response, ERIS_Response
 
 class ERIS_Tag(object):
     def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
@@ -161,7 +161,9 @@ class ERISAPI(object):
                 timeout=self.timeout,
             )
             assert result.status_code == 200, "Status Code failed"
-            return XML_Response(result.text)
+            return ERIS_Response(
+                XML_Response(result.text)
+            )
         except AssertionError as e:
             logging.error(e)
 

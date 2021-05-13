@@ -26,7 +26,7 @@ Basic flow is as follows. Example is also below:
 4. call request_api_data method with request class
     1. the response will either be an XML or JSON response class. Functionally they are basically the same thing.
 
-
+### Example
 ```
 from ERIS_API import ERISAPI, ERIS_Tag, ERIS_Request
 import datetime
@@ -62,8 +62,10 @@ Within the response object there is the following properties:
 2. tag_dataframes
     * This is the collection of tags converted to dataframes. 
     * Columns are `Timestamp,Tag Label,Value`
+3. response_content
+    * raw response content from request
 
-
+### Example
 
 ```
 # continuing from above.
@@ -123,5 +125,4 @@ extract_tags_from_url(test_url)
         }
     ]
 }
-
 ```
