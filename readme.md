@@ -91,8 +91,6 @@ You, the user, can decide how to work with the output data from here. Either sav
 
 To improve query performance, your script should adjust the start date to the start/end times after any existing data to avoid re-requesting the same block.
 
-Functionally, this is beyond the scope of the processing.
-
 # Additional Functions
 
 ## Extract Tag from  URL
