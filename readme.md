@@ -18,28 +18,28 @@ Basic flow is as follows. Example is also below:
     1. Client ID
 
 2. Build Tag list
-    1. Each tag should be an instance of the ERIS_Tag class
+    1. Each tag should be an instance of the ERISTag class
 
 3. Build Request Class
     1. provide the start time, end time and either the single tag, or a list of tags
 
 4. call request_api_data method with request class
-    1. the response will either be an XML or JSON response class. Functionally they are basically the same thing.
+    1. the response will be an ERISResponse class.
 
 ### Example
 ```
-from ERIS_API import ERISAPI, ERIS_Tag, ERIS_Request
+from ERIS_API import ERISAPI, ERISTag, ERISRequest
 import datetime
 
 start_time = datetime.datetime(2021,1,1)
 end_time = datetime.datetime(2021,2,1)
 
 input_tags = [
-    ERIS_Tag(label="sample label", "sampletag", "average", "P1D"),
-    ERIS_Tag(label="sample label 2", "sampletag", "average", "P2M"),
+    ERISTag(label="sample label", tag="sampletag", mode="average", interval="P1D"),
+    ERISTag(label="sample label 2", tag="sampletag", mode="average", label="P2M"),
 ]
 
-request_class = ERIS_Request(
+request_class = ERISRequest(
     start_time=start_time,
     end_time=end_time,
     tags=input_tags
@@ -62,8 +62,9 @@ Within the response object there is the following properties:
 2. tag_dataframes
     * This is the collection of tags converted to dataframes. 
     * Columns are `Timestamp,Tag Label,Value`
-3. response_content
-    * raw response content from request
+3. response_class
+    * raw response class from request
+    * this contains the original response content
 
 ### Example
 

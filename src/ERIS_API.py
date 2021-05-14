@@ -7,7 +7,7 @@ from urllib.parse import urlparse, unquote, parse_qs
 
 from ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
 
-class ERIS_Tag(object):
+class ERISTag(object):
     def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
         self.label = label
         self.tag = tag
@@ -38,7 +38,7 @@ class ERIS_Tag(object):
             yield (key, val)
 
 
-class ERIS_Request(object):
+class ERISRequest(object):
     def __init__(self, start_time, end_time, tags) -> None:
         self.start = start_time
         self.end = end_time
@@ -80,13 +80,7 @@ class ERISAPI(object):
         result = requests.post(
             auth_uri, auth=(self.username, self.password), headers={"x-client-id": self.client_id}
         )
-
-        # result = requests.post(
-        #     auth_uri, 
-        #     json={"userId": self.username, "password": self.password},
-        #     headers={"x-client-id": self.client_id}
-        # )
-
+        
         assert result.status_code == 200, "Failed to reach authentication page"
         result_json = result.json()
 
@@ -111,14 +105,14 @@ class ERISAPI(object):
         return is_valid
 
     def request_api_data(self, request_parameters):
-        """Request ERIS data via the API. Requires request parameters in the form of dictionary.
+        """Request ERIS data via the API. Requires request parameters in the form of ERISResponse class.
         Args:
             request_parameters (
                 {
                     "start": datetime.datetime,
                     "end": datetime.datetime,
                     tags: ["optional label", "tag", "sample mode", "period"]
-                }): dictionary containing the requesting tags
+                }): ERISResponse containing the requesting tags
 
         Returns:
             dict: json result of the request as a dictionary
@@ -208,6 +202,6 @@ def extract_tags_from_url(url):
 
 def _parse_tag(_tag):
     if len(_tag) == 3:
-        return ERIS_Tag(None, *_tag)
+        return ERISTag(None, *_tag)
     else:
-        return ERIS_Tag(*_tag)
+        return ERISTag(*_tag)

@@ -6,7 +6,7 @@ class ERISResponse(object):
     def __init__(self, type_response_class) -> None:
         super().__init__()
         self.tag_data = type_response_class.tag_data
-        self.response_content = type_response_class.response_content
+        self.response_class = type_response_class
         self.tag_dataframes = []
 
     def to_json(self, indent=None):
