@@ -7,6 +7,12 @@ Intended use is to simplify requesting data from ERIS.
 
 To proceed the user must be added to the API group and you must also know the client ID of the group.
 
+# Install
+
+```
+pip install ERIS_API
+```
+
 # Usage
 
 Basic flow is as follows. Example is also below:
