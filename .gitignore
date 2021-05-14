@@ -13,3 +13,5 @@ request_eris.py
 **docs/
 
 **.egg-info/
+
+**build/

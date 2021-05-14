@@ -5,7 +5,7 @@ import json
 
 from urllib.parse import urlparse, unquote, parse_qs
 
-from ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
+from ERIS_API.ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
 
 class ERISTag(object):
     def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
