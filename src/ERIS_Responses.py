@@ -1,6 +1,7 @@
 import pandas as pd
 import xml.etree.ElementTree as ET
 import json
+import logging
 
 class ERISResponse(object):
     def __init__(self, type_response_class) -> None:
@@ -40,6 +41,12 @@ class ERISResponse(object):
         """
         tag_label = 'description' if tag_label is None else tag_label
         label_name = tag.get(tag_label) if custom_label is None else custom_label
+
+        if len(tag['data']) == 0:
+            _uid = tag['name']
+            logging.warning(f"No data for tag {_uid} - {label_name}")
+            return
+
         df = pd.DataFrame(tag['data'], columns=["Timestamp", "Tag Label", "Value"])
         df["Tag Label"] = label_name
         self.tag_dataframes.append(df)
