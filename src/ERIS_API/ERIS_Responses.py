@@ -14,23 +14,40 @@ class ERISResponse(object):
         indent = 4 if indent is None else indent
         return json.dumps(self.tag_data, indent=indent)
 
-    def convert_tags_to_dataframes(self, concat=None):
+    def convert_tags_to_dataframes(self, concat=None, parse_datetime=None, parse_values=None):
         """Convert all internal tag data to individual data frames using 'description'
 
         If concat is True, then it will concatenate it to a single dataframe as the return.
         Default is to concatenate the dataframes.
+
+        Option to attempt to parse datetime in default format %Y-%m-%dT%H:%M:%S
+        Will round to the closest second.
+        Will default to True if not specified
+
+        Option to also attempt to convert the value field to a numeric type.
+        Will default to True if not specified
         """
         concat = True if concat is None else concat
         for tag in self.tag_data:
-            self.tag_to_dataframe(tag)
+            self.tag_to_dataframe(tag, 
+            parse_datetime=parse_datetime, 
+            parse_values=parse_values
+        )
         result = pd.concat(self.tag_dataframes) if concat == True else self.tag_dataframes
         return result
 
-    def tag_to_dataframe(self, tag, tag_label=None, custom_label=None) -> pd.Series:
+    def tag_to_dataframe(self, tag, tag_label=None, custom_label=None, parse_datetime=None, parse_values=None) -> pd.DataFrame:
         """Convert a tag to a pandas data frame of the format 
         Can either pull from one of the tag keys or use a custom label
 
         if both are blank then it will default to 'tagUID'
+
+        Option to attempt to parse datetime in default format %Y-%m-%dT%H:%M:%S
+        Will round to the closest second.
+        Will default to True if not specified
+
+        Option to also attempt to convert the value field to a numeric type.
+        Will default to True if not specified
 
         Timestamp, Tag Label, Value
         Args:
@@ -38,6 +55,9 @@ class ERISResponse(object):
             tag_label (string): One of the dictionary keys to use as a label. Default is 'tagUID'
             custom_label (string): Label of own choosing
         """
+        parse_datetime = True if parse_datetime is None else parse_datetime
+        parse_values = True if parse_values is None else parse_values
+
         tag_label = 'tagUID' if tag_label is None else tag_label
         label_name = tag.get(tag_label) if custom_label is None else custom_label
 
@@ -48,8 +68,42 @@ class ERISResponse(object):
 
         df = pd.DataFrame(tag['data'], columns=["Timestamp", "Tag Label", "Value"])
         df["Tag Label"] = label_name
+        df = self._parse_timestamp(df) if parse_datetime == True else df
+        df = self._parse_values(df) if parse_values == True else df
+
         self.tag_dataframes.append(df)
         return df
+
+    def _parse_timestamp(self, df):
+        """Attempt to parse the Timestamp field to a pandas timestamp object
+
+        Args:
+            df (pandas.DataFrame): dataframe of the tag to parse
+
+        Returns:
+            pandas.DataFrame: data frame of parsed format, or original if error
+        """
+        try:
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'],format="%Y-%m-%dT%H:%M:%S")
+            df['Timestamp'] = df['Timestamp'].dt.round("S")
+            return df
+        except Exception as e:
+            logging.warning(f"Error parsing timestamp. Field left as is. {e}")
+    
+    def _parse_values(self, df):
+        """Attempt to parse the Value field to a pandas numeric type
+
+        Args:
+            df (pandas.DataFrame): dataframe of the tag to parse
+
+        Returns:
+            pandas.DataFrame: data frame of parsed format, or original if error
+        """
+        try:
+            df['Value'] = pd.to_numeric(df['Value'])
+            return df
+        except Exception as e:
+            logging.warning(f"Error parsing Value. Field left as is. {e}")
 
 class XMLResponse(object):
     """XML Response object from an eris query.
