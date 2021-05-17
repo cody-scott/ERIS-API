@@ -75,6 +75,8 @@ Within the response object there is the following properties:
 Finally, the response will attempt to process the `Timestamp` to a python datetime friendly format, rounding to the nearest second. It will also try and parse the `Value` to a numeric value.
 If this fails it will remain as exported.
 
+This can be ignored by setting parse_datetime or parse_values to False in the `convert_tags_to_dataframes` function.
+
 ### Example
 
 ```
