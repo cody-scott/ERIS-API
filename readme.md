@@ -10,7 +10,7 @@ To proceed the user must be added to the API group and you must also know the cl
 # Install
 
 ```
-pip install ERIS_API
+pip install ERIS-API
 ```
 
 # Usage
