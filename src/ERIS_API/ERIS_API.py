@@ -4,7 +4,6 @@ import datetime
 import json
 
 from urllib.parse import urlparse, unquote, parse_qs
-
 from ERIS_API.ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
 
 class ERISTag(object):
@@ -136,12 +135,9 @@ class ERISAPI(object):
                 }
             )
             assert result.status_code == 200, "Failed to reach API"
-            result_json = result.json()
-            _status = result_json.get('status')
-            _message = result_json.get("message", "Generic error with data request")
-            assert _status == 200, f"status: {_status} - message: {_message}"
-            
-            return result.json()
+            return ERISResponse(
+                JSONResponse(result)
+            )
         except AssertionError as e:
             logging.error(e)
 

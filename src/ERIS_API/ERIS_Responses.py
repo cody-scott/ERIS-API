@@ -12,7 +12,6 @@ class ERISResponse(object):
 
     def to_json(self, indent=None):
         indent = 4 if indent is None else indent
-        assert self.tag_data is not None, "Run processes response before trying to export to json"
         return json.dumps(self.tag_data, indent=indent)
 
     def convert_tags_to_dataframes(self, concat=None):
@@ -31,15 +30,15 @@ class ERISResponse(object):
         """Convert a tag to a pandas data frame of the format 
         Can either pull from one of the tag keys or use a custom label
 
-        if both are blank then it will default to 'description'
+        if both are blank then it will default to 'tagUID'
 
         Timestamp, Tag Label, Value
         Args:
             tag (dictionary of tag): dictionary of the tag returned from _process_tree
-            tag_label (string): One of the dictionary keys to use as a label. Default is 'description'
+            tag_label (string): One of the dictionary keys to use as a label. Default is 'tagUID'
             custom_label (string): Label of own choosing
         """
-        tag_label = 'description' if tag_label is None else tag_label
+        tag_label = 'tagUID' if tag_label is None else tag_label
         label_name = tag.get(tag_label) if custom_label is None else custom_label
 
         if len(tag['data']) == 0:
@@ -51,7 +50,6 @@ class ERISResponse(object):
         df["Tag Label"] = label_name
         self.tag_dataframes.append(df)
         return df
-
 
 class XMLResponse(object):
     """XML Response object from an eris query.
@@ -122,7 +120,52 @@ class XMLResponse(object):
         return [attribs['time'], attribs['source'], attribs['value']]
 
 class JSONResponse(object):
-    """Waiting for valid response to complete this.
-    Likely will share many similarities, hence the _Generic_Response usage
-    """
-    pass
+    def __init__(self, requests_class) -> None:
+        """Init the class with the provided response content.
+
+        Args:
+            response_content ([type]): [description]
+        """
+        super().__init__()
+        self.request = requests_class
+        self.response_content = requests_class.json()
+        self.tag_data = None
+        self._process_response()
+
+    def _process_response(self):
+        tags = self.response_content.get("tag")
+        if tags is None:
+            raise "No data in eris tag response"
+
+        tag_data = []
+        for tag in tags:
+            tag_data.append(self._process_tag(tag))
+
+        self.tag_data = tag_data
+
+        return tag_data
+
+    def _process_tag(self, tag_json):
+        info_dict = {
+            'tagUID': None,
+            'name': None,
+            'description': None,
+            'engUnits': None,
+            'sampleInterval': None,
+            'samplingMode': None,
+            'data': []
+        }
+        for value in tag_json:          
+            if value not in info_dict: continue
+            var = info_dict.get(value)
+            if value == 'data': continue
+            info_dict[value] = tag_json.get(value) if var is None else var
+        
+        info_dict['data'] = self._process_data(tag_json['data'])
+        return info_dict
+
+    def _process_data(self, _data):
+        output_data = []
+        for row in _data:
+            output_data.append([row['time'], row['source'], row['value']])
+        return output_data

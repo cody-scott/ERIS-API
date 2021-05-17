@@ -81,6 +81,9 @@ result = api.request_api_data(request_class)
 # for one tag - change index to particular tag
 tag_df = result.tag_to_dataframe(result.tag_data[0])
 
+# can also specify which dictionary key to use (see the Response class) or a custom label. Will use custom label if both are given.
+tag_df = result.tag_to_dataframe(result.tag_data[0], custom_label="Custom Tag")
+
 # for all tags - concat argument will return either a single dataframe if True, or a list of individual tag dataframes if False
 
 # combined
