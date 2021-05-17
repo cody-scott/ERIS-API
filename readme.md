@@ -72,6 +72,9 @@ Within the response object there is the following properties:
     * raw response class from request
     * this contains the original response content
 
+Finally, the response will attempt to process the `Timestamp` to a python datetime friendly format, rounding to the nearest second. It will also try and parse the `Value` to a numeric value.
+If this fails it will remain as exported.
+
 ### Example
 
 ```
