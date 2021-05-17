@@ -91,9 +91,9 @@ class ERISAPI(object):
         _message = result_json.get("message", "General Authentication Error")
         assert _status == 200, f"status: {_status} - message: {_message}"
 
-        _access_token = result_json.get("access-token")
-        self.token_contents = _access_token
-        return self.access_token.get("x-access-token")
+        _data = result_json.get('data', {})
+        self.token_contents = _data
+        return self.token_contents.get("x-access-token")
 
     def _current_token_valid(self):
         """Validate if current token is valid, if not request new one"""
