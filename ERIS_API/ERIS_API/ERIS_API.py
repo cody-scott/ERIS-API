@@ -39,10 +39,13 @@ class ERISTag(object):
 
 
 class ERISRequest(object):
-    def __init__(self, start_time, end_time, tags) -> None:
+    def __init__(self, start_time, end_time, tags, regex=None, compact=None) -> None:
         self.start = start_time
         self.end = end_time
         self.tags = tags if type(tags) is list else [tags]
+
+        self.regex = regex if type(regex) is bool else None
+        self.compact = compact if type(compact) is bool else None
         
 
 class ERISAPI(object):
@@ -156,7 +159,7 @@ class ERISAPI(object):
             )
             assert result.status_code == 200, "Status Code failed"
             return ERISResponse(
-                XMLResponse(result.text)
+                XMLResponse(result)
             )
         except AssertionError as e:
             logging.error(e)
@@ -169,8 +172,15 @@ class ERISAPI(object):
         _start = _start.strftime(dt_format) if type(_start) is datetime.datetime else _start
         _end = _end.strftime(dt_format) if type(_end) is datetime.datetime else _end
         _tags = ",".join([_.tag_to_string() for _ in tag_class.tags])
+        out_params = {"start": _start, "end": _end, "tags": _tags}
 
-        return {"start": _start, "end": _end, "tags": _tags}
+        if tag_class.regex is not None:
+            out_params["regex"] = tag_class.regex
+
+        if tag_class.compact is not None:
+            out_params['compact'] = tag_class.compact
+
+        return out_params
 
 def extract_tags_from_url(url):
     """Return the components of the requested url. This is normally obtained via the Source link at the bottom of a request.

@@ -63,14 +63,15 @@ class XMLResponse(object):
     Args:
         object ([type]): [description]
     """
-    def __init__(self, response_content) -> None:
+    def __init__(self, requests_class) -> None:
         """Init the class with the provided response content.
 
         Args:
             response_content ([type]): [description]
         """
         super().__init__()
-        self.response_content = response_content
+        self.request = requests_class
+        self.response_content = requests_class.text
         self.tag_data = None
         self._process_response()
         
