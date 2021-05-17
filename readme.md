@@ -134,3 +134,53 @@ extract_tags_from_url(test_url)
     ]
 }
 ```
+
+## JSON to Tag
+
+Method to convert a .json file of your tag list to a list of ERISTags
+
+Input is either 
+* `json_dict`: pre-loaded dictionary of your tags
+* `json_file`: file path to a json dictionary in the structure below
+
+### JSON Structure
+```
+[
+    {
+        "label": "lbl_value",
+        "tag": "tag_value",
+        "mode": "raw",
+        "interval": "P1D"
+    },
+    {
+        "label": "lbl_value2",
+        "tag": "tag_value2",
+        "mode": "raw",
+        "interval": "P1D"
+    }
+]
+```
+
+### Usage
+```
+from ERIS_API import json_to_tags
+
+json_dict = [
+    {
+        "label": "lbl_value",
+        "tag": "tag_value",
+        "mode": "raw",
+        "interval": "P1D"
+    },
+    {
+        "label": "lbl_value2",
+        "tag": "tag_value2",
+        "mode": "raw",
+        "interval": "P1D"
+    }
+]
+json_path = "eris_tags.json"
+
+tags = json_to_tags(json_dict=json_dict)
+tags = json_to_tags(json_path=json_path)
+```
