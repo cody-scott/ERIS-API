@@ -1,0 +1,8 @@
+[
+    {
+        "label": "Label",
+        "tag": "TAG",
+        "mode": "periodTotal",
+        "interval": "P1D"
+    }
+]

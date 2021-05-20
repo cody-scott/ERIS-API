@@ -19,18 +19,24 @@ Basic flow is as follows. Example is also below:
 
 1. Create ERISAPI Class with following parameters
     1. URL to ERIS. Include the trailing slash "https://www.eris.com/"
-    1. Username
-    1. Password
     1. Client ID
-
+    1. Username
+    1. Password or Token
+    
 2. Build Tag list
-    1. Each tag should be an instance of the ERISTag class
+    1. Each tag should be an instance of the `ERISTag` class
 
 3. Build Request Class
     1. provide the start time, end time and either the single tag, or a list of tags
 
-4. call request_api_data method with request class
-    1. the response will be an ERISResponse class.
+4. call `request_api_data` method with request class
+    1. the response will be an `ERISResponse` class.
+
+## Authorization
+
+To authorize the request you need to supply a `username` and one of `password` or `token`, in addition to the `client_id`.
+
+If both a password and a token are supplied, it will default to the password.
 
 ### Example
 ```
@@ -51,7 +57,12 @@ request_class = ERISRequest(
     tags=input_tags
 )
 
-api = ERISAPI("https://www.eris.com/", "USERNAME", "PASSWORD", "CLIENT_ID")
+#password version
+api = ERISAPI(base_url="https://www.eris.com/", client_id="CLIENT_ID", username="USERNAME", password="PASSWORD")
+
+#token version
+api = ERISAPI(base_url="https://www.eris.com/", client_id="CLIENT_ID", username="USERNAME", token="TOKEN")
+
 result = api.request_api_data(request_class)
 ```
 
@@ -119,7 +130,7 @@ from ERIS_API import extract_tags_from_url
 
 input_url = "https://eris.com/api/rest/tag/data?start=2021-03-29T00:00:00&end=P1M3D&tags=sample_label:sample.tag:first:PT2M"
 
-extract_tags_from_url(test_url)
+extract_tags_from_url(input_url)
 
 # RESULT
 {

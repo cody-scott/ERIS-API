@@ -1,10 +1,28 @@
+from requests.auth import HTTPBasicAuth
+
 import logging
 import requests
 import datetime
-import json
+import base64
 
-from urllib.parse import urlparse, unquote, parse_qs
 from ERIS_API.ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
+
+
+class _Token_Auth(requests.auth.AuthBase):
+    """Subclass request auth for token authorization"""
+    def __init__(self, username, token):
+        self.username = username
+        self.token = token
+
+    def __call__(self, r):
+        assert self.username is not None, "No username supplied"
+        assert self.token is not None, "No token supplied"
+        _auth = ':'.join((self.username, self.token)).encode()
+        _encoded = base64.b64encode(_auth).strip()
+        authstr = 'Token ' + _encoded.decode()
+        r.headers['Authorization'] = authstr
+        return r
+
 
 class ERISTag(object):
     def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
@@ -48,15 +66,30 @@ class ERISRequest(object):
         
 
 class ERISAPI(object):
-    def __init__(self, base_url, username, password, client_id, timeout=None):
+    def __init__(self, base_url, client_id, username, password=None, token=None, timeout=None):
+        """ERIS Api class. 
+        
+        Handles the authentication, and parsing of the supplied ERISRequest.
+
+        Args:
+            base_url (str): URL of the ERIS page.
+            client_id (str): client ID of the ERIS site
+
+            username (str): username for authentication
+                        
+            password (str): password for login. Optional as a token can also be supplied. Default to password if both.
+            token (str, optional): token for login. Optional as a password can also be supplied.
+
+            timeout (int, optional): Set default timeout for request. Defaults to 1800 seconds if left as None.
+        """
         super().__init__()
 
         self.base_url = base_url
         self.base_url = base_url[:-1] if self.base_url.endswith("/") else base_url
 
         self.base_esrm_url = self.base_url+"/esrm/rest"
-        # self.base_api_url = self.base_url+"/api/rest"
         self.base_api_url = self.base_url+"/api/rest"
+
         self.authenticate_url = "/auth/login"
         self.data_url = "/tag/data"
 
@@ -67,6 +100,9 @@ class ERISAPI(object):
 
         self.username = username
         self.password = password
+        self.login_token = token
+
+        assert any([_ is not None for _ in [self.login_token, self.password]]), "password or token must be supplied"
 
     def get_access_token(self):
         """Authenticate to ERIS and obtain an access token. 
@@ -80,7 +116,9 @@ class ERISAPI(object):
         auth_uri = self.base_api_url + self.authenticate_url
 
         result = requests.post(
-            auth_uri, auth=(self.username, self.password), headers={"x-client-id": self.client_id}
+            auth_uri, 
+            auth=self.build_auth(), 
+            headers={"x-client-id": self.client_id}
         )
         
         assert result.status_code == 200, "Failed to reach authentication page"
@@ -94,8 +132,29 @@ class ERISAPI(object):
         self.token_contents = _data
         return self.token_contents.get("x-access-token")
 
+    def build_auth(self):
+        """Construct the requests authorization class
+
+        Will return either HTTPBasicAuth or _Token_Auth.
+
+        If password is present, then HTTPBasic, otherwise _Token_Auth
+        """
+        username = self.username
+        password = self.password
+        token = self.login_token
+        if password is not None:
+            return HTTPBasicAuth(username, password)
+        elif token is not None:
+            return _Token_Auth(username, token)
+        
+        raise "Username, Password and Token is empty"
+
     def _current_token_valid(self):
-        """Validate if current token is valid, if not request new one"""
+        """Validate if current token is valid.
+        
+        returns:
+            bool: is token valid then True, else False
+        """
         if self.access_token is None: return False
 
         expire_time = self.access_token.get("expires")
@@ -177,91 +236,3 @@ class ERISAPI(object):
             out_params['compact'] = tag_class.compact
 
         return out_params
-
-
-def extract_tags_from_url(url):
-    """Return the components of the requested url. This is normally obtained via the Source link at the bottom of a request.
-
-    Returns the start/end times, but those are for reference. Main intent is to extract the requested tag from the url"""
-    parsed_url = urlparse(url)
-    query = unquote(parsed_url.query)
-    qs_content = parse_qs(query)
-
-    st = qs_content.get("start")
-    et = qs_content.get("end")
-
-    tags = qs_content.get("tags")
-    tags = tags[0].split(",")
-
-    tag_classes = [_parse_tag(_.split(":")) for _ in tags]
-
-
-    result = json.dumps(
-        {
-            "start": st,
-            "end": et,
-            "tags": [dict(_) for _ in tag_classes]
-        },
-        indent=4
-    )
-
-    return result
-
-
-def _parse_tag(_tag):
-    if len(_tag) == 3:
-        return ERISTag(None, *_tag)
-    else:
-        return ERISTag(*_tag)
-
-
-def json_to_tags(json_dict=None, json_path=None):
-    """Helper to convert a json file or feature to ERISTags.
-
-    Structure is expected as 
-    [
-        {
-            "label": "lbl_value",
-            "tag": "tag_value",
-            "mode": "raw",
-            "interval": "P1D"
-        },
-        {
-            "label": "lbl_value2",
-            "tag": "tag_value2",
-            "mode": "raw",
-            "interval": "P1D"
-        }
-    ]
-
-    Args:
-        json_dict (dict, optional): already parsed json file in a dictionary. Defaults to None.
-        json_path (string, optional): path to the file. Defaults to None.
-
-    Returns:
-        [type]: [description]
-    """
-    if json_path is not None:
-        _json_data = _load_json(json_path)
-    elif json_dict is not None:
-        _json_data = json_dict
-    
-    assert _json_data is not None, "No JSON data or path provided"
-
-    _tags = []
-    for _ in _json_data:
-        tag = ERISTag(
-            _.get('label'),
-            _.get('tag'),
-            _.get('mode'),
-            _.get('interval')
-        )
-        _tags.append(tag)
-    return _tags
-
-
-def _load_json(_path):
-    _data = None
-    with open(_path, 'r') as fl:
-        _data = json.loads(fl.read())
-    return _data

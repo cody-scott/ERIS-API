@@ -33,6 +33,10 @@ class ERISResponse(object):
             parse_datetime=parse_datetime, 
             parse_values=parse_values
         )
+        if len(self.tag_dataframes) == 0:
+            logging.warning("No dataframes in response")
+            return
+
         result = pd.concat(self.tag_dataframes) if concat == True else self.tag_dataframes
         return result
 
