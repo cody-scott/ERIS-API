@@ -26,7 +26,10 @@ class _Token_Auth(requests.auth.AuthBase):
 
 class ERISTag(object):
     def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
-        self.label = label
+        if " " in label:
+            new_lbl = label.replace(" ", "_")
+            logging.warning(f"Spaces in label {label}. Replacing with _: {new_lbl} ")
+        self.label = label.replace(" ", "_")
         self.tag = tag
         self.mode = mode
         self.interval = interval
@@ -179,20 +182,9 @@ class ERISAPI(object):
             dict: json result of the request as a dictionary
         """
         try:
-            access_token = self.get_access_token()
-
-            params = self._construct_request_parameters(request_parameters)
             uri = self.base_api_url + self.data_url
-
-            result = requests.get(
-                uri, 
-                params=params, 
-                timeout=self.timeout,
-                headers={
-                    "x-access-token": access_token,
-                    "x-client-id": self.client_id
-                }
-            )
+            params = self._construct_request_parameters(request_parameters)
+            result = self.request_data(uri, params)
             assert result.status_code == 200, "Failed to reach API"
             return ERISResponse(
                 JSONResponse(result)
@@ -218,6 +210,34 @@ class ERISAPI(object):
             )
         except AssertionError as e:
             logging.error(e)
+
+    def request_data(self, url, request_parameters=None):
+        """Generic request. 
+        Intended use is to provide the authenticated request to any eris endpoint.
+        It is essentially the request.get with the eris authentication step added in.
+
+        request parameter is the generic dictionary of parameters so you can pass whatever you would like.
+
+        Args:
+            url (str): path to the requested endpoint
+            request_parameters (dict, optional): dictionary of parameters to pass. Defaults to None.
+
+        Returns:
+            request.Response: Response class from the request library.
+        """
+        access_token = self.get_access_token()
+        params = request_parameters if request_parameters is not None else None
+        result = requests.get(
+            url, 
+            params=params, 
+            timeout=self.timeout,
+            headers={
+                "x-access-token": access_token,
+                "x-client-id": self.client_id
+            }
+        )
+
+        return result
 
     def _construct_request_parameters(self, tag_class):
         _start = tag_class.start

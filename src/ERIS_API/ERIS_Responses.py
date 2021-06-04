@@ -193,7 +193,8 @@ class JSONResponse(object):
     def _process_response(self):
         tags = self.response_content.get("tag")
         if tags is None:
-            raise "No data in eris tag response"
+            logging.warning("No data in eris tag response")
+            return
 
         tag_data = []
         for tag in tags:

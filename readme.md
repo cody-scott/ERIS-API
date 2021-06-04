@@ -109,6 +109,17 @@ tag_df = result.convert_tags_to_dataframes(True)
 tag_dfs = result.convert_tags_to_dataframes(False) 
 ```
 
+## Generic Request
+
+To optionally pass a generic url to an eris endpoint use the `ERISAPI.request_data` function.
+
+The function accepts a url and a dictionary of parameters. This is a generic wrapper around the `requests.get` function which takes care of the authentication step.
+
+```
+api = ERISAPI(url, username, password, client_id)
+api.request_data("https://eris.com/rest/tag/list", parameters={})
+```
+
 ## Next Steps
 
 You, the user, can decide how to work with the output data from here. Either saving the dataframe(s) to excel, csv, or loading it into an SQL database.
