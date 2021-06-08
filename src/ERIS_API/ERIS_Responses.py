@@ -15,7 +15,7 @@ class ERISResponse(object):
         return json.dumps(self.tag_data, indent=indent)
 
     def convert_tags_to_dataframes(self, concat=None, parse_datetime=None, parse_values=None):
-        """Convert all internal tag data to individual data frames using 'description'
+        """Convert all internal tag data to individual data frames
 
         If concat is True, then it will concatenate it to a single dataframe as the return.
         Default is to concatenate the dataframes.
@@ -40,11 +40,25 @@ class ERISResponse(object):
         result = pd.concat(self.tag_dataframes) if concat == True else self.tag_dataframes
         return result
 
+    def _determine_tag_label(self, tag_dict, tag_label=None, custom_label=None):
+        tag_label = 'name' if tag_label is None else tag_label
+        eris_tag = tag_dict.get('eris_tag')
+        eris_label = eris_tag.label if eris_tag is not None else None
+
+        label_name = None
+        if eris_label is not None:
+            label_name = eris_label
+        elif custom_label is None:
+            label_name = tag_dict.get(tag_label)
+        else:
+            label_name = custom_label
+
+        return label_name
+
     def tag_to_dataframe(self, tag, tag_label=None, custom_label=None, parse_datetime=None, parse_values=None) -> pd.DataFrame:
         """Convert a tag to a pandas data frame of the format 
-        Can either pull from one of the tag keys or use a custom label
-
-        if both are blank then it will default to 'tagUID'
+        If a label is given in the ERISTag class it will try and match to this in the processing. This is the label to use.
+        Otherwise it will either use a custom label if provided or default to the name attribute in the response.
 
         Option to attempt to parse datetime in default format %Y-%m-%dT%H:%M:%S
         Will round to the closest second.
@@ -56,14 +70,15 @@ class ERISResponse(object):
         Timestamp, Tag Label, Value
         Args:
             tag (dictionary of tag): dictionary of the tag returned from _process_tree
-            tag_label (string): One of the dictionary keys to use as a label. Default is 'tagUID'
+            tag_label (string): One of the dictionary keys to use as a label. Default is 'name'
             custom_label (string): Label of own choosing
         """
         parse_datetime = True if parse_datetime is None else parse_datetime
         parse_values = True if parse_values is None else parse_values
 
-        tag_label = 'tagUID' if tag_label is None else tag_label
-        label_name = tag.get(tag_label) if custom_label is None else custom_label
+        # tag_label = 'tagUID' if tag_label is None else tag_label
+        # label_name = tag.get(tag_label) if custom_label is None else custom_label
+        label_name = self._determine_tag_label(tag, tag_label, custom_label)
 
         if len(tag['data']) == 0:
             _uid = tag['name']
@@ -109,7 +124,37 @@ class ERISResponse(object):
         except Exception as e:
             logging.warning(f"Error parsing Value. Field left as is. {e}")
 
-class XMLResponse(object):
+class _BaseResponse(object):
+    def __init__(self, requests_class) -> None:
+        super().__init__()
+        self.tag_data = None
+
+        self.base_info_dict = {
+            'tagUID': None,
+            'name': None,
+            'description': None,
+            'engUnits': None,
+            'sampleInterval': None,
+            'samplingMode': None,
+            'data': [],
+            'provider': None
+        }
+        self.request = requests_class
+        self.response_content = requests_class.json()
+        self.tag_data = None
+
+    def _match_tags(self, request_parameters):
+        eris_tags = request_parameters.tags
+        for tag in self.tag_data:
+            tag['eris_tag'] = self._match_tag(eris_tags, tag)
+    
+    def _match_tag(self, eris_tags, tag):
+        for e_tag in eris_tags:
+            if tag['tagUID']==e_tag.request_uuid: 
+                return e_tag
+        return None
+
+class XMLResponse(_BaseResponse):
     """XML Response object from an eris query.
 
     Flow is intiate response, process the response.
@@ -119,18 +164,16 @@ class XMLResponse(object):
     Args:
         object ([type]): [description]
     """
-    def __init__(self, requests_class) -> None:
+    def __init__(self, requests_class, request_parameters) -> None:
         """Init the class with the provided response content.
 
         Args:
             response_content ([type]): [description]
         """
-        super().__init__()
-        self.request = requests_class
-        self.response_content = requests_class.text
-        self.tag_data = None
+        super().__init__(requests_class)
         self._process_response()
-        
+        self._match_tags(request_parameters)
+
     def _process_response(self):
         eris_tree = ET.fromstring(self.response_content)
 
@@ -149,20 +192,11 @@ class XMLResponse(object):
         return tag_data
 
     def _process_tag(self, tag_xml):
-        info_dict = {
-            'tagUID': None,
-            'name': None,
-            'description': None,
-            'engUnits': None,
-            'sampleInterval': None,
-            'samplingMode': None,
-            'data': []
-        }
+        info_dict = self.base_info_dict.copy()
         for row in tag_xml:
             _tag = row.tag
             _tag = _tag[_tag.find("}")+1:]
 
-            
             if _tag not in info_dict: continue
 
             var = info_dict.get(_tag)
@@ -177,18 +211,16 @@ class XMLResponse(object):
         attribs = data_val.attrib
         return [attribs['time'], attribs['source'], attribs['value']]
 
-class JSONResponse(object):
-    def __init__(self, requests_class) -> None:
+class JSONResponse(_BaseResponse):
+    def __init__(self, requests_class, request_parameters) -> None:
         """Init the class with the provided response content.
 
         Args:
             response_content ([type]): [description]
         """
-        super().__init__()
-        self.request = requests_class
-        self.response_content = requests_class.json()
-        self.tag_data = None
+        super().__init__(requests_class)
         self._process_response()
+        self._match_tags(request_parameters)
 
     def _process_response(self):
         tags = self.response_content.get("tag")
@@ -205,15 +237,8 @@ class JSONResponse(object):
         return tag_data
 
     def _process_tag(self, tag_json):
-        info_dict = {
-            'tagUID': None,
-            'name': None,
-            'description': None,
-            'engUnits': None,
-            'sampleInterval': None,
-            'samplingMode': None,
-            'data': []
-        }
+        info_dict = self.base_info_dict.copy()
+        
         for value in tag_json:          
             if value not in info_dict: continue
             var = info_dict.get(value)

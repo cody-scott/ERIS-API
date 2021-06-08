@@ -5,6 +5,8 @@ import requests
 import datetime
 import base64
 
+from uuid import uuid4
+
 from ERIS_API.ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
 
 
@@ -26,17 +28,29 @@ class _Token_Auth(requests.auth.AuthBase):
 
 class ERISTag(object):
     def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
-        if " " in label:
-            new_lbl = label.replace(" ", "_")
-            logging.warning(f"Spaces in label {label}. Replacing with _: {new_lbl} ")
-        self.label = label.replace(" ", "_")
+        """Init the tag class
+
+        to provide a matching back to the tag following the request, the tag is generated with a uuid to identify it.
+        The UUID is used within the label and becomes the tagUID in the response. 
+
+        The reasoning is to fix the spaces issues with the request. ERIS internally seems to want to change the encoding which introduces spaces into the reuqest internally, causing it to fail.
+        This then alows for spaces in the label, but the query is sent without spaces and translated back afterwards.
+        
+        Args:
+            label (str, optional): label to use in response dataframe. Defaults to None.
+            tag (str, optional): tag to get data of. Defaults to None.
+            mode (str, optional): sample mode. Defaults to None.
+            interval (str, optional): sample interval. Defaults to None.
+        """
+        self.request_uuid = str(uuid4()).replace("-","")
+        self.label = label
         self.tag = tag
         self.mode = mode
         self.interval = interval
 
     def tag_to_string(self):
         vals = [_ for _ in [
-            self.label,
+            self.request_uuid,
             self.tag,
             self.mode,
             self.interval
@@ -182,12 +196,12 @@ class ERISAPI(object):
             dict: json result of the request as a dictionary
         """
         try:
-            uri = self.base_api_url + self.data_url
+            uri = self.data_url
             params = self._construct_request_parameters(request_parameters)
             result = self.request_data(uri, params)
             assert result.status_code == 200, "Failed to reach API"
             return ERISResponse(
-                JSONResponse(result)
+                JSONResponse(result, request_parameters)
             )
         except AssertionError as e:
             logging.error(e)
@@ -206,12 +220,12 @@ class ERISAPI(object):
             )
             assert result.status_code == 200, "Status Code failed"
             return ERISResponse(
-                XMLResponse(result)
+                XMLResponse(result, request_parameters)
             )
         except AssertionError as e:
             logging.error(e)
 
-    def request_data(self, url, request_parameters=None):
+    def request_data(self, data_url, request_parameters=None):
         """Generic request. 
         Intended use is to provide the authenticated request to any eris endpoint.
         It is essentially the request.get with the eris authentication step added in.
@@ -225,10 +239,11 @@ class ERISAPI(object):
         Returns:
             request.Response: Response class from the request library.
         """
+        _url = self.base_api_url + self.data_url
         access_token = self.get_access_token()
         params = request_parameters if request_parameters is not None else None
         result = requests.get(
-            url, 
+            _url, 
             params=params, 
             timeout=self.timeout,
             headers={

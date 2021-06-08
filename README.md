@@ -117,7 +117,7 @@ The function accepts a url and a dictionary of parameters. This is a generic wra
 
 ```
 api = ERISAPI(url, username, password, client_id)
-api.request_data("https://eris.com/rest/tag/list", parameters={})
+api.request_data("/tag/list", parameters={})
 ```
 
 ## Next Steps
