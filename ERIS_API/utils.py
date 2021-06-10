@@ -1,5 +1,5 @@
 from urllib.parse import urlparse, unquote, parse_qs
-from ERIS_API.ERIS_API import ERISTag
+from .ERIS_API import ERISTag
 
 import json
 

@@ -7,7 +7,7 @@ import base64
 
 from uuid import uuid4
 
-from ERIS_API.ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
+from .ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
 
 
 class _Token_Auth(requests.auth.AuthBase):
