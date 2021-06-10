@@ -78,7 +78,7 @@ Within the response object there is the following properties:
     * this is the processed tag, which contains additional information. Type is a dictionary.
 2. tag_dataframes
     * This is the collection of tags converted to dataframes. 
-    * Columns are `Timestamp,Tag Label,Value`
+    * Columns are `Timestamp,Tag,Value`
 3. response_class
     * raw response class from request
     * this contains the original response content
