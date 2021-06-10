@@ -67,7 +67,7 @@ class ERISResponse(object):
         Option to also attempt to convert the value field to a numeric type.
         Will default to True if not specified
 
-        Timestamp, Tag Label, Value
+        Timestamp, Tag, Value
         Args:
             tag (dictionary of tag): dictionary of the tag returned from _process_tree
             tag_label (string): One of the dictionary keys to use as a label. Default is 'name'
@@ -85,8 +85,8 @@ class ERISResponse(object):
             logging.warning(f"No data for tag {_uid} - {label_name}")
             return
 
-        df = pd.DataFrame(tag['data'], columns=["Timestamp", "Tag Label", "Value"])
-        df["Tag Label"] = label_name
+        df = pd.DataFrame(tag['data'], columns=["Timestamp", "Tag", "Value"])
+        df["Tag"] = label_name
         df = self._parse_timestamp(df) if parse_datetime == True else df
         df = self._parse_values(df) if parse_values == True else df
 
