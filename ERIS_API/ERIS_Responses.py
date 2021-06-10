@@ -140,7 +140,6 @@ class _BaseResponse(object):
             'provider': None
         }
         self.request = requests_class
-        self.response_content = requests_class.json()
         self.tag_data = None
 
     def _match_tags(self, request_parameters):
@@ -171,6 +170,7 @@ class XMLResponse(_BaseResponse):
             response_content ([type]): [description]
         """
         super().__init__(requests_class)
+        self.response_content = requests_class.text
         self._process_response()
         self._match_tags(request_parameters)
 
@@ -219,6 +219,7 @@ class JSONResponse(_BaseResponse):
             response_content ([type]): [description]
         """
         super().__init__(requests_class)
+        self.response_content = requests_class.json()
         self._process_response()
         self._match_tags(request_parameters)
 
