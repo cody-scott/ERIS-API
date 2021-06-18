@@ -42,7 +42,10 @@ class ERISTag(object):
             mode (str, optional): sample mode. Defaults to None.
             interval (str, optional): sample interval. Defaults to None.
         """
-        self.request_uuid = str(uuid4()).replace("-","")
+        assert all([_ is not None for _ in [tag, mode, interval]]), "Must supply a tag, mode and interval"
+        
+        self.rr = uuid4()
+        self.request_uuid = str(self.rr).replace("-","")
         self.label = label
         self.tag = tag
         self.mode = mode
@@ -74,12 +77,17 @@ class ERISTag(object):
 
 class ERISRequest(object):
     def __init__(self, start_time, end_time, tags, regex=None, compact=None) -> None:
+        if isinstance(tags, list):
+            assert all([isinstance(_, ERISTag) for _ in tags]), "Must provide only ERISTag classes as a tag"
+        else:
+            assert isinstance(tags, ERISTag), "Must provide only ERISTag classes as a tag"
+            tags = [tags]
+
         self.start = start_time
         self.end = end_time
-        self.tags = tags if type(tags) is list else [tags]
-
-        self.regex = regex if type(regex) is bool else None
-        self.compact = compact if type(compact) is bool else None
+        self.tags = tags
+        self.regex = regex if isinstance(regex, bool) else None
+        self.compact = compact if isinstance(compact, bool) else None
         
 
 class ERISAPI(object):
