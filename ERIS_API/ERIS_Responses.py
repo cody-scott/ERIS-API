@@ -136,11 +136,10 @@ class _BaseResponse(object):
             'engUnits': None,
             'sampleInterval': None,
             'samplingMode': None,
-            'data': [],
+            'data': None,
             'provider': None
         }
         self.request = requests_class
-        self.tag_data = None
 
     def _match_tags(self, request_parameters):
         eris_tags = request_parameters.tags
@@ -170,6 +169,7 @@ class XMLResponse(_BaseResponse):
             response_content ([type]): [description]
         """
         super().__init__(requests_class)
+        self.tag_data = None
         self.response_content = requests_class.text
         self._process_response()
         self._match_tags(request_parameters)
@@ -193,6 +193,7 @@ class XMLResponse(_BaseResponse):
 
     def _process_tag(self, tag_xml):
         info_dict = self.base_info_dict.copy()
+        info_dict['data'] = []
         for row in tag_xml:
             _tag = row.tag
             _tag = _tag[_tag.find("}")+1:]
@@ -219,6 +220,7 @@ class JSONResponse(_BaseResponse):
             response_content ([type]): [description]
         """
         super().__init__(requests_class)
+        self.tag_data = None
         self.response_content = requests_class.json()
         self._process_response()
         self._match_tags(request_parameters)
@@ -239,7 +241,7 @@ class JSONResponse(_BaseResponse):
 
     def _process_tag(self, tag_json):
         info_dict = self.base_info_dict.copy()
-        
+        info_dict['data'] = []
         for value in tag_json:          
             if value not in info_dict: continue
             var = info_dict.get(value)

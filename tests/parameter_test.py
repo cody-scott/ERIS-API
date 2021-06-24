@@ -14,7 +14,7 @@ class TestERISTag(unittest.TestCase):
     def test_uuid(self):
         _actual = self._get_actual_uuid()
         _tag = ERIS_API.ERISTag("lbl","tag","mode","interval")
-        self.assertEquals(_tag.request_uuid, _actual)
+        self.assertEqual(_tag.request_uuid, _actual)
 
     @patch('ERIS_API.ERIS_API.uuid4', new=_norm_uuid)
     def test_valid_params_all(self):       
@@ -25,11 +25,11 @@ class TestERISTag(unittest.TestCase):
         _actual_interval = 'interval'
 
         _tag = ERIS_API.ERISTag("lbl","tag","mode","interval")
-        self.assertEquals(_tag.label, _actual_label)
-        self.assertEquals(_tag.tag, _actual_tag)
-        self.assertEquals(_tag.mode, _actual_mode)
-        self.assertEquals(_tag.interval, _actual_interval)
-        self.assertEquals(_tag.request_uuid, _actual_uuid)
+        self.assertEqual(_tag.label, _actual_label)
+        self.assertEqual(_tag.tag, _actual_tag)
+        self.assertEqual(_tag.mode, _actual_mode)
+        self.assertEqual(_tag.interval, _actual_interval)
+        self.assertEqual(_tag.request_uuid, _actual_uuid)
 
     @patch('ERIS_API.ERIS_API.uuid4', new=_norm_uuid)
     def test_valid_params_no_label(self):       
@@ -39,11 +39,11 @@ class TestERISTag(unittest.TestCase):
         _actual_interval = 'interval'
 
         _tag = ERIS_API.ERISTag(tag="tag",mode="mode",interval="interval")
-        self.assertEquals(_tag.label, None)
-        self.assertEquals(_tag.tag, _actual_tag)
-        self.assertEquals(_tag.mode, _actual_mode)
-        self.assertEquals(_tag.interval, _actual_interval)
-        self.assertEquals(_tag.request_uuid, _actual_uuid)
+        self.assertEqual(_tag.label, None)
+        self.assertEqual(_tag.tag, _actual_tag)
+        self.assertEqual(_tag.mode, _actual_mode)
+        self.assertEqual(_tag.interval, _actual_interval)
+        self.assertEqual(_tag.request_uuid, _actual_uuid)
     
     def test_missing_one_valid_param(self):       
         _actual_tag = 'tag'
@@ -68,7 +68,7 @@ class TestERISTag(unittest.TestCase):
         _valid = f"{_actual}:tag:mode:interval"
         _tag = ERIS_API.ERISTag("lbl","tag","mode","interval")
         _result = _tag.tag_to_string()
-        self.assertEquals(_valid, _result)
+        self.assertEqual(_valid, _result)
 
     def test_str_method_label(self):
         _valid = "Label: lbl\nTag: tag\nMode: mode\nInterval: interval"
@@ -164,3 +164,6 @@ class TestERISRequest(unittest.TestCase):
         _et = "ET"
         req = ERIS_API.ERISRequest(_st, _et, _tag,compact="a")
         self.assertEqual(None, req.compact)
+
+if __name__ == "__main__":
+    unittest.main()
