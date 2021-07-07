@@ -1,0 +1,90 @@
+{
+    "info": [
+        {
+            "type": "status",
+            "key": "key1",
+            "tag": "tag1",
+            "message": "completed",
+            "progress": 100
+        },
+        {
+            "type": "status",
+            "key": "key2",
+            "tag": "tag2",
+            "message": "completed",
+            "progress": 100
+        }
+    ],
+    "tag": [
+        {
+            "info": [
+                {
+                    "value": "",
+                    "type": "timer"
+                }
+            ],
+            "tagUID": "uid1",
+            "name": "name1",
+            "description": "TEST DESCRIPTION 1",
+            "engUnits": "m3",
+            "sampleInterval": "P1D",
+            "samplingMode": "periodTotal:P1D",
+            "descriptor": [],
+            "annotation": [],
+            "data": [],
+            "start": "2000-01-01T00:00:00",
+            "end": "2000-01-07T00:00:00",
+            "requestor": "",
+            "provider": "WATH",
+            "cacheable": true,
+            "inputType": "xs:decimal"
+        },
+        {
+            "info": [
+                {
+                    "value": "",
+                    "type": "info",
+                    "key": "gap",
+                    "message": "Checking for data gaps: P1DT1S or longer"
+                },
+                {
+                    "value": "",
+                    "type": "timer"
+                }
+            ],
+            "tagUID": "uid2",
+            "name": "name2",
+            "description": "TEST DESCRIPTION 2",
+            "engUnits": "mm",
+            "sampleInterval": "P1D",
+            "samplingMode": "raw:P1D",
+            "descriptor": [],
+            "annotation": [],
+            "data": [],
+            "start": "2000-01-01T00:00:00",
+            "end": "2000-01-07T00:00:00",
+            "requestor": "",
+            "provider": "EC",
+            "source": "",
+            "cacheable": true,
+            "inputType": "xs:decimal"
+        }
+    ],
+    "id": "",
+    "start": "2000-01-01T00:00:00",
+    "end": "2000-01-07T00:00:00",
+    "generated": "2021-06-29T09:03:56.510",
+    "requestor": "",
+    "cacheable": true,
+    "created": "2021-06-29T09:03:56.510",
+    "expires": "PT5M",
+    "progress": 100,
+    "request": "",
+    "query": "[]",
+    "tags": 2,
+    "data": 0,
+    "mappings": "[]",
+    "complete": true,
+    "immediate": true,
+    "background": false
+}
