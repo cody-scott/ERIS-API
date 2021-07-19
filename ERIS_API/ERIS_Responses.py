@@ -16,11 +16,11 @@ class ERISResponse(object):
         self.response_class = type_response_class
         self.tag_dataframes = []
 
-    def to_json(self, indent=None):
+    def to_json(self, indent=None) -> str:
         indent = 4 if indent is None else indent
         return json.dumps(self.tag_data, indent=indent)
 
-    def convert_tags_to_dataframes(self, concat=None, parse_datetime=None, parse_values=None):
+    def convert_tags_to_dataframes(self, concat=None, parse_datetime=None, parse_values=None) -> pd.DataFrame:
         """Convert all internal tag data to individual data frames
 
         If concat is True, then it will concatenate it to a single dataframe as the return.
@@ -46,7 +46,7 @@ class ERISResponse(object):
         result = pd.concat(self.tag_dataframes) if concat == True else self.tag_dataframes
         return result
 
-    def _determine_tag_label(self, tag_dict, tag_label=None, custom_label=None):
+    def _determine_tag_label(self, tag_dict, tag_label=None, custom_label=None) -> Optional[str]:
         tag_label = 'name' if tag_label is None else tag_label
         eris_tag = tag_dict.get('eris_tag')
         eris_label = eris_tag.label if eris_tag is not None else None
@@ -99,7 +99,7 @@ class ERISResponse(object):
         self.tag_dataframes.append(df)
         return df
 
-    def _parse_timestamp(self, df):
+    def _parse_timestamp(self, df) -> pd.DataFrame:
         """Attempt to parse the Timestamp field to a pandas timestamp object
 
         Args:
@@ -114,8 +114,8 @@ class ERISResponse(object):
             return df
         except Exception as e:
             logging.warning(f"Error parsing timestamp. Field left as is. {e}")
-    
-    def _parse_values(self, df):
+        
+    def _parse_values(self, df) -> pd.DataFrame:
         """Attempt to parse the Value field to a pandas numeric type
 
         Args:
