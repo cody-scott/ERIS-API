@@ -65,14 +65,41 @@ class TestResponse(unittest.TestCase):
             tags=tags
         )
 
-    def test_fixture(self):
-        self.load_error_fixture()
+    def setup_ERIS_Response(self, fixture_function):
+        fixture_function()
         mock_response = self.request_response()
         tags = self.create_valid_params()
         eris_r = self.create_valid_request(tags)
         res_class = ERIS_Responses.JSONResponse(mock_response, eris_r)
+        return res_class
 
+    def test_process_row(self):
+        valid_row = json.loads("""{
+                    "annotationText": [],
+                    "time": "2021-01-01T00:00:00.000",
+                    "valueQualifier": "EQ",
+                    "value": "5",
+                    "initialValueQualifier": "EQ",
+                    "initialValue": "5.0",
+                    "quality": 100,
+                    "source": "",
+                    "comments": "",
+                    "flags": "",
+                    "annotations": [],
+                    "valid": true,
+                    "operator": "",
+                    "use": true,
+                    "created": "2021-06-28T12:09:27.000",
+                    "lastModified": "2021-06-28T12:09:27.000",
+                    "status": "",
+                    "reviewRequired": false,
+                    "reviewed": false,
+                    "final": true
+        }""")
+        er_class = self.setup_ERIS_Response(self.load_valid_fixture)
         pass
+
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,7 +1,13 @@
+
 import pandas as pd
 import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element
 import json
 import logging
+
+from typing import Optional, List, Dict, Union, Mapping, Any
+
+import requests
 
 class ERISResponse(object):
     def __init__(self, type_response_class) -> None:
@@ -171,10 +177,13 @@ class XMLResponse(_BaseResponse):
         super().__init__(requests_class)
         self.tag_data = None
         self.response_content = requests_class.text
-        self._process_response()
-        self._match_tags(request_parameters)
+        self.request_parameters = request_parameters
 
-    def _process_response(self):
+    def process_data(self) -> None:
+        self._process_response()
+        self._match_tags(self.request_parameters)
+
+    def _process_response(self) -> List[Dict]:
         eris_tree = ET.fromstring(self.response_content)
 
         tag_data = []
@@ -191,7 +200,7 @@ class XMLResponse(_BaseResponse):
 
         return tag_data
 
-    def _process_tag(self, tag_xml):
+    def _process_tag(self, tag_xml: Element) -> Dict[str, Union[Optional[str], List[Union[str, int, float]]]]:
         info_dict = self.base_info_dict.copy()
         info_dict['data'] = []
         for row in tag_xml:
@@ -208,12 +217,12 @@ class XMLResponse(_BaseResponse):
         
         return info_dict
 
-    def _process_data(self, data_val):
+    def _process_data(self, data_val: Element) -> List[Union[str, int, float]]:
         attribs = data_val.attrib
         return [attribs['time'], attribs['source'], attribs['value']]
 
 class JSONResponse(_BaseResponse):
-    def __init__(self, requests_class, request_parameters) -> None:
+    def __init__(self, requests_class: requests.Response, request_parameters) -> None:
         """Init the class with the provided response content.
 
         Args:
@@ -222,10 +231,13 @@ class JSONResponse(_BaseResponse):
         super().__init__(requests_class)
         self.tag_data = None
         self.response_content = requests_class.json()
-        self._process_response()
-        self._match_tags(request_parameters)
+        self.request_parameters = request_parameters
 
-    def _process_response(self):
+    def process_data(self) -> None:
+        self._process_response()
+        self._match_tags(self.request_parameters)
+
+    def _process_response(self) -> List[Dict]:
         tags = self.response_content.get("tag")
         if tags is None:
             logging.warning("No data in eris tag response")
@@ -239,7 +251,7 @@ class JSONResponse(_BaseResponse):
 
         return tag_data
 
-    def _process_tag(self, tag_json):
+    def _process_tag(self, tag_json: Dict) -> Dict[str, Union[Optional[str], List[Union[str, int, float]]]]:
         info_dict = self.base_info_dict.copy()
         info_dict['data'] = []
         for value in tag_json:          
@@ -251,8 +263,19 @@ class JSONResponse(_BaseResponse):
         info_dict['data'] = self._process_data(tag_json['data'])
         return info_dict
 
-    def _process_data(self, _data):
+    def _process_data(self, _data: List) -> List[Union[str, int, float]]:
         output_data = []
         for row in _data:
-            output_data.append([row['time'], row['source'], row['value']])
+            output_data.append(self._process_row(row))
         return output_data
+
+    def _process_row(self, _row) -> List[Union[str, int, float]]:
+        """Process the individual row
+
+        Args:
+            _row ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        return [_row['time'], _row['source'], _row['value']]

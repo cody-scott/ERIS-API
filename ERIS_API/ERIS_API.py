@@ -9,14 +9,15 @@ from uuid import uuid4
 
 from .ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
 
+from typing import Optional, Dict, List, Union
 
 class _Token_Auth(requests.auth.AuthBase):
     """Subclass request auth for token authorization"""
-    def __init__(self, username, token):
+    def __init__(self, username: str, token: str):
         self.username = username
         self.token = token
 
-    def __call__(self, r):
+    def __call__(self, r: requests.Request):
         assert self.username is not None, "No username supplied"
         assert self.token is not None, "No token supplied"
         _auth = ':'.join((self.username, self.token)).encode()
@@ -27,7 +28,7 @@ class _Token_Auth(requests.auth.AuthBase):
 
 
 class ERISTag(object):
-    def __init__(self, label=None, tag=None, mode=None, interval=None) -> None:
+    def __init__(self, label: Optional[str]=None, tag: Optional[str]=None, mode: Optional[str]=None, interval: Optional[str]=None) -> None:
         """Init the tag class
 
         to provide a matching back to the tag following the request, the tag is generated with a uuid to identify it.
@@ -51,7 +52,7 @@ class ERISTag(object):
         self.mode = mode
         self.interval = interval
 
-    def tag_to_string(self):
+    def tag_to_string(self) -> str:
         vals = [_ for _ in [
             self.request_uuid,
             self.tag,
@@ -69,14 +70,14 @@ class ERISTag(object):
         vals = [_ for _ in [lbl, tag, mode, interval] if _ is not None]
         return "\n".join(vals)
 
-    def __iter__(self):
+    def __iter__(self) -> Dict[str, str]:
         zip_list = zip(["label", "tag","mode","interval"], [self.label, self.tag, self.mode, self.interval])
         for key, val in zip_list:
             yield (key, val)
 
 
 class ERISRequest(object):
-    def __init__(self, start_time, end_time, tags, regex=None, compact=None) -> None:
+    def __init__(self, start_time: Union[datetime.datetime, str], end_time: Union[datetime.datetime, str], tags: List[ERISTag], regex: Optional[bool] =None, compact: Optional[bool]=None) -> None:
         if isinstance(tags, list):
             assert all([isinstance(_, ERISTag) for _ in tags]), "Must provide only ERISTag classes as a tag"
         else:
@@ -91,7 +92,7 @@ class ERISRequest(object):
         
 
 class ERISAPI(object):
-    def __init__(self, base_url, client_id, username, password=None, token=None, timeout=None):
+    def __init__(self, base_url: str, client_id: str, username: str, password: Optional[str]=None, token: Optional[str]=None, timeout: Optional[int]=None):
         """ERIS Api class. 
         
         Handles the authentication, and parsing of the supplied ERISRequest.
@@ -129,7 +130,7 @@ class ERISAPI(object):
 
         assert any([_ is not None for _ in [self.login_token, self.password]]), "password or token must be supplied"
 
-    def get_access_token(self):
+    def get_access_token(self) -> str:
         """Authenticate to ERIS and obtain an access token. 
 
         If token exists (aka a previous request) then the time is validated 
@@ -157,7 +158,7 @@ class ERISAPI(object):
         self.token_contents = _data
         return self.token_contents.get("x-access-token")
 
-    def build_auth(self):
+    def build_auth(self) -> Union[_Token_Auth, requests.auth.HTTPBasicAuth]:
         """Construct the requests authorization class
 
         Will return either HTTPBasicAuth or _Token_Auth.
@@ -174,7 +175,7 @@ class ERISAPI(object):
         
         raise "Username, Password and Token is empty"
 
-    def _current_token_valid(self):
+    def _current_token_valid(self) -> bool:
         """Validate if current token is valid.
         
         returns:
@@ -190,7 +191,7 @@ class ERISAPI(object):
         is_valid = True if expire_time>check_time else False
         return is_valid
 
-    def request_api_data(self, request_parameters):
+    def request_api_data(self, request_parameters: ERISRequest) -> ERISResponse:
         """Request ERIS data via the API. Requires request parameters in the form of ERISResponse class.
         Args:
             request_parameters (
@@ -208,13 +209,15 @@ class ERISAPI(object):
             params = self._construct_request_parameters(request_parameters)
             result = self.request_data(uri, params)
             assert result.status_code == 200, "Failed to reach API"
+            _type_response = JSONResponse(result, request_parameters)
+            _type_response.process_data()
             return ERISResponse(
-                JSONResponse(result, request_parameters)
+                _type_response
             )
         except AssertionError as e:
             logging.error(e)
 
-    def request_esrm_data(self, request_parameters):
+    def request_esrm_data(self, request_parameters: ERISRequest) -> ERISResponse:
         """Requesting via the ESRM url
         requires API input dictionary and returns the XML content
         """
@@ -227,13 +230,15 @@ class ERISAPI(object):
                 timeout=self.timeout,
             )
             assert result.status_code == 200, "Status Code failed"
+            _type_response = XMLResponse(result, request_parameters)
+            _type_response.process_data()
             return ERISResponse(
-                XMLResponse(result, request_parameters)
+                _type_response
             )
         except AssertionError as e:
             logging.error(e)
 
-    def request_data(self, data_url, request_parameters=None):
+    def request_data(self, data_url: str, request_parameters: Optional[ERISRequest]=None):
         """Generic request. 
         Intended use is to provide the authenticated request to any eris endpoint.
         It is essentially the request.get with the eris authentication step added in.
@@ -262,13 +267,13 @@ class ERISAPI(object):
 
         return result
 
-    def _construct_request_parameters(self, tag_class):
+    def _construct_request_parameters(self, tag_class: ERISRequest) -> Dict[str, str]:
         _start = tag_class.start
         _end = tag_class.end
 
         dt_format = "%Y-%m-%dT%H:%M:%S"
-        _start = _start.strftime(dt_format) if type(_start) is datetime.datetime else _start
-        _end = _end.strftime(dt_format) if type(_end) is datetime.datetime else _end
+        _start = _start.strftime(dt_format) if isinstance(_start, datetime.datetime) else _start
+        _end = _end.strftime(dt_format) if isinstance(_end, datetime.datetime) else _end
         _tags = ",".join([_.tag_to_string() for _ in tag_class.tags])
         out_params = {"start": _start, "end": _end, "tags": _tags}
 
