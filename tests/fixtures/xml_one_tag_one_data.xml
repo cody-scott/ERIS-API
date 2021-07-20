@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tagDataset xmlns="http://www.eramosa.com/2011/eSCADAr/Tag" id="e348f94a-c215-4e4e-95b3-9a9010714ba8" start="2021-07-19T00:00:00" end="2021-07-20T00:00:00" generated="2021-07-20T12:16:48.852" requestor="" created="2021-07-20T12:16:48.852" expires="PT15M" progress="100" request="uid1:tag1" query="[tag1|u]" tags="1" data="24" mappings="[]" complete="true" immediate="true">
+    <info type="status" key="uid1" tag="tag1|u" message="completed" progress="100"/>
+    <tag start="2021-07-19T00:00:00" end="2021-07-20T00:00:00" requestor="" provider="WATH">
+        <info type="timer">(003a30.00|http-nio-8080-exec-1|245.22ms) GET /tag/data?provider=WATH&amp;tag=name1&amp;start=2021-07-19T00:00:00&amp;end=2021-07-20T00:00:00&amp;mode=rawByTime&amp;samples=P1D --&gt; data:24</info>
+        <tagUID>uid1</tagUID>
+        <name>name1</name>
+        <description>description 1</description>
+        <engUnits>m3</engUnits>
+        <sampleInterval>P1D</sampleInterval>
+        <samplingMode>rawByTime:P1D</samplingMode>
+        <data time="2021-07-19T00:00:00" value="2281768" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+    </tag>
+</tagDataset>

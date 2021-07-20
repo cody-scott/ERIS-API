@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tagDataset xmlns="http://www.eramosa.com/2011/eSCADAr/Tag" id="a3d67f42-5dd5-4759-b530-e0c168ab322d" start="2021-07-01T00:00:00" end="2021-07-02T00:00:00" generated="2021-07-20T16:38:32.033" requestor="" created="2021-07-20T16:38:32.033" expires="PT5M" progress="100" request="uid1:tag1,uid2:tag2" query="[tag1|u, tag2|u]" tags="2" data="2" mappings="[]" complete="true" immediate="true">
+    <info type="status" key="81430f2fffba41ada2b1f4bddb90643b" tag="tag1|u" message="completed" progress="100"/>
+    <info type="status" key="e6e8e01d061d4efa9650b4dad9c2324b" tag="tag2|u" message="completed" progress="100"/>
+    <tag start="2021-07-01T00:00:00" end="2021-07-02T00:00:00" requestor="" provider="WATH">
+        <info type="timer">(000057.02|http-nio-8080-exec-10|273.24ms) GET /tag/data?provider=WATH&amp;tag=name1&amp;start=2021-07-01T00:00:00&amp;end=2021-07-02T00:00:00&amp;mode=periodTotal&amp;samples=P1D --&gt; data:1</info>
+        <tagUID>uid1</tagUID>
+        <name>name1</name>
+        <description>description 1</description>
+        <engUnits>m3</engUnits>
+        <sampleInterval>P1D</sampleInterval>
+        <samplingMode>periodTotal:P1D</samplingMode>
+        <data time="2021-07-01T00:00:00" value="1861" initialValue="" quality="100" source="tag1" flags="" annotations="" limit="" colour="" operator=""/>
+    </tag>
+    <tag start="2021-07-01T00:00:00" end="2021-07-02T00:00:00" requestor="" provider="WATH">
+        <info type="timer">(000057.02|http-nio-8080-exec-7|366.05ms) GET /tag/data?provider=WATH&amp;tag=name2&amp;start=2021-07-01T00:00:00&amp;end=2021-07-02T00:00:00&amp;mode=first&amp;samples=P1D --&gt; data:1</info>
+        <tagUID>uid2</tagUID>
+        <name>name2</name>
+        <description>description 2</description>
+        <engUnits>kPa</engUnits>
+        <sampleInterval>P1D</sampleInterval>
+        <samplingMode>first:P1D</samplingMode>
+        <data time="2021-07-01T00:00:00" value="558.0703" initialValue="" quality="100" source="tag2" flags="" annotations="" limit="" colour="" operator=""/>
+    </tag>
+</tagDataset>
