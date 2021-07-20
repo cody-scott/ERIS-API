@@ -8,12 +8,117 @@ import logging
 from typing import Optional, List, Dict, Union, Mapping, Any
 
 import requests
+import xmltodict
+
+from ERIS_API import models
+
+
+class _BaseResponse(object):
+    def __init__(self, requests_class) -> None:
+        super().__init__()
+        self.tag_data = None
+        self.request = requests_class
+
+    def _match_tags(self, request_parameters):
+        eris_tags = request_parameters.tags
+        for tag in self.tag_data:
+            tag.eris_tag = self._match_tag(eris_tags, tag)
+    
+    def _match_tag(self, eris_tags, tag):
+        for e_tag in eris_tags:
+            if tag.tagUID==e_tag.request_uuid: 
+                return e_tag
+        return None
+
+class XMLResponse(_BaseResponse):
+    """XML Response object from an eris query.
+
+    Flow is intiate response, process the response.
+
+    Processed response can either be exported to a dataframe(s) or kept as the dictionary
+
+    Args:
+        object ([type]): [description]
+    """
+    def __init__(self, requests_class, request_parameters) -> None:
+        """Init the class with the provided response content.
+
+        Args:
+            response_content ([type]): [description]
+        """
+        super().__init__(requests_class)
+        self.tag_data = None
+        self.response_content = requests_class.text
+        self.request_parameters = request_parameters
+
+    def process_data(self) -> None:
+        self._process_response()
+        self._match_tags(self.request_parameters)
+
+        return self.tag_data
+
+    def _process_response(self) -> List[models.ERISData]:
+        tag_tree = xmltodict.parse(self.response_content, attr_prefix="")
+        if not 'tagDataset' in tag_tree:
+            logging.warning("No tagDataset found in response")
+            return
+        
+        tag_tree = tag_tree['tagDataset']
+        if not isinstance(tag_tree['tag'], list):
+            tag_tree['tag'] = [tag_tree['tag']]
+
+        tag_data = []
+        for i, _ in enumerate(tag_tree['tag']):
+            _data = _.get('data')
+            if _data is None:
+                continue
+
+            if not isinstance(_.get('data'), list):
+                _['data'] = [_['data']]
+            tag_data.append(_)
+        tag_tree['tag'] = tag_data
+
+        tag_model = models.RawERISResponse(**tag_tree)
+
+        self.raw_model = tag_model
+        self.tag_data = [models.ERISData(**tag.dict()) for tag in tag_model.tags]
+        return self.tag_data
+
+class JSONResponse(_BaseResponse):
+    def __init__(self, requests_class: requests.Response, request_parameters) -> None:
+        """Init the class with the provided response content.
+
+        Args:
+            response_content ([type]): [description]
+        """
+        super().__init__(requests_class)
+        self.tag_data = None
+        self.response_content = requests_class.json()
+        self.request_parameters = request_parameters
+
+    def process_data(self) -> None:
+        self._process_response()
+        self._match_tags(self.request_parameters)
+
+        return self.tag_data
+
+    def _process_response(self) -> List[models.ERISData]:
+        tag_model = models.RawERISResponse(**self.response_content)
+        if len(tag_model.tags) == 0:
+            logging.warning("No data in eris tag response")
+            return
+        
+        self.raw_model = tag_model
+        self.tag_data = [models.ERISData(**tag.dict()) for tag in tag_model.tags]
+
+        return self.tag_data
 
 class ERISResponse(object):
-    def __init__(self, type_response_class) -> None:
+    def __init__(self, type_response_class: Union[JSONResponse, XMLResponse]) -> None:
         super().__init__()
         self.tag_data = type_response_class.tag_data
         self.response_class = type_response_class
+        self.response_content = self.response_class.response_content
         self.tag_dataframes = []
 
     def to_json(self, indent=None) -> str:
@@ -35,10 +140,7 @@ class ERISResponse(object):
         """
         concat = True if concat is None else concat
         for tag in self.tag_data:
-            self.tag_to_dataframe(tag, 
-            parse_datetime=parse_datetime, 
-            parse_values=parse_values
-        )
+            self.tag_to_dataframe(tag)
         if len(self.tag_dataframes) == 0:
             logging.warning("No dataframes in response")
             return
@@ -46,22 +148,22 @@ class ERISResponse(object):
         result = pd.concat(self.tag_dataframes) if concat == True else self.tag_dataframes
         return result
 
-    def _determine_tag_label(self, tag_dict, tag_label=None, custom_label=None) -> Optional[str]:
+    def _determine_tag_label(self, tag_dict: models.ERISData, tag_label=None, custom_label=None) -> Optional[str]:
         tag_label = 'name' if tag_label is None else tag_label
-        eris_tag = tag_dict.get('eris_tag')
+        eris_tag = tag_dict.eris_tag
         eris_label = eris_tag.label if eris_tag is not None else None
 
         label_name = None
         if eris_label is not None:
             label_name = eris_label
         elif custom_label is None:
-            label_name = tag_dict.get(tag_label)
+            label_name = tag_dict.dict().get(tag_label)
         else:
             label_name = custom_label
 
         return label_name
 
-    def tag_to_dataframe(self, tag, tag_label=None, custom_label=None, parse_datetime=None, parse_values=None) -> pd.DataFrame:
+    def tag_to_dataframe(self, tag: models.ERISData, tag_label=None, custom_label=None) -> pd.DataFrame:
         """Convert a tag to a pandas data frame of the format 
         If a label is given in the ERISTag class it will try and match to this in the processing. This is the label to use.
         Otherwise it will either use a custom label if provided or default to the name attribute in the response.
@@ -79,22 +181,22 @@ class ERISResponse(object):
             tag_label (string): One of the dictionary keys to use as a label. Default is 'name'
             custom_label (string): Label of own choosing
         """
-        parse_datetime = True if parse_datetime is None else parse_datetime
-        parse_values = True if parse_values is None else parse_values
-
         # tag_label = 'tagUID' if tag_label is None else tag_label
         # label_name = tag.get(tag_label) if custom_label is None else custom_label
         label_name = self._determine_tag_label(tag, tag_label, custom_label)
 
-        if len(tag['data']) == 0:
-            _uid = tag['name']
+        if len(tag.data) == 0:
+            _uid = tag.name
             logging.warning(f"No data for tag {_uid} - {label_name}")
             return
 
-        df = pd.DataFrame(tag['data'], columns=["Timestamp", "Tag", "Value"])
+        df = pd.DataFrame([_.dict() for _ in tag.data])
+        df.rename(columns={
+            'timestamp': 'Timestamp',
+            'tag': 'Tag',
+            'value': 'Value'
+        }, inplace=True)
         df["Tag"] = label_name
-        df = self._parse_timestamp(df) if parse_datetime == True else df
-        df = self._parse_values(df) if parse_values == True else df
 
         self.tag_dataframes.append(df)
         return df
@@ -129,153 +231,3 @@ class ERISResponse(object):
             return df
         except Exception as e:
             logging.warning(f"Error parsing Value. Field left as is. {e}")
-
-class _BaseResponse(object):
-    def __init__(self, requests_class) -> None:
-        super().__init__()
-        self.tag_data = None
-
-        self.base_info_dict = {
-            'tagUID': None,
-            'name': None,
-            'description': None,
-            'engUnits': None,
-            'sampleInterval': None,
-            'samplingMode': None,
-            'data': None,
-            'provider': None
-        }
-        self.request = requests_class
-
-    def _match_tags(self, request_parameters):
-        eris_tags = request_parameters.tags
-        for tag in self.tag_data:
-            tag['eris_tag'] = self._match_tag(eris_tags, tag)
-    
-    def _match_tag(self, eris_tags, tag):
-        for e_tag in eris_tags:
-            if tag['tagUID']==e_tag.request_uuid: 
-                return e_tag
-        return None
-
-class XMLResponse(_BaseResponse):
-    """XML Response object from an eris query.
-
-    Flow is intiate response, process the response.
-
-    Processed response can either be exported to a dataframe(s) or kept as the dictionary
-
-    Args:
-        object ([type]): [description]
-    """
-    def __init__(self, requests_class, request_parameters) -> None:
-        """Init the class with the provided response content.
-
-        Args:
-            response_content ([type]): [description]
-        """
-        super().__init__(requests_class)
-        self.tag_data = None
-        self.response_content = requests_class.text
-        self.request_parameters = request_parameters
-
-    def process_data(self) -> None:
-        self._process_response()
-        self._match_tags(self.request_parameters)
-
-    def _process_response(self) -> List[Dict]:
-        eris_tree = ET.fromstring(self.response_content)
-
-        tag_data = []
-        tags = []
-        for c in eris_tree:
-            if not "tag" in c.tag:
-                continue
-            tags.append(c)
-        
-        for tag in tags:
-            tag_data.append(self._process_tag(tag))
-
-        self.tag_data = tag_data
-
-        return tag_data
-
-    def _process_tag(self, tag_xml: Element) -> Dict[str, Union[Optional[str], List[Union[str, int, float]]]]:
-        info_dict = self.base_info_dict.copy()
-        info_dict['data'] = []
-        for row in tag_xml:
-            _tag = row.tag
-            _tag = _tag[_tag.find("}")+1:]
-
-            if _tag not in info_dict: continue
-
-            var = info_dict.get(_tag)
-            if _tag == 'data':
-                var.append(self._process_data(row))
-            else:
-                info_dict[_tag] = row.text if var is None else var
-        
-        return info_dict
-
-    def _process_data(self, data_val: Element) -> List[Union[str, int, float]]:
-        attribs = data_val.attrib
-        return [attribs['time'], attribs['source'], attribs['value']]
-
-class JSONResponse(_BaseResponse):
-    def __init__(self, requests_class: requests.Response, request_parameters) -> None:
-        """Init the class with the provided response content.
-
-        Args:
-            response_content ([type]): [description]
-        """
-        super().__init__(requests_class)
-        self.tag_data = None
-        self.response_content = requests_class.json()
-        self.request_parameters = request_parameters
-
-    def process_data(self) -> None:
-        self._process_response()
-        self._match_tags(self.request_parameters)
-
-    def _process_response(self) -> List[Dict]:
-        tags = self.response_content.get("tag")
-        if tags is None:
-            logging.warning("No data in eris tag response")
-            return
-
-        tag_data = []
-        for tag in tags:
-            tag_data.append(self._process_tag(tag))
-
-        self.tag_data = tag_data
-
-        return tag_data
-
-    def _process_tag(self, tag_json: Dict) -> Dict[str, Union[Optional[str], List[Union[str, int, float]]]]:
-        info_dict = self.base_info_dict.copy()
-        info_dict['data'] = []
-        for value in tag_json:          
-            if value not in info_dict: continue
-            var = info_dict.get(value)
-            if value == 'data': continue
-            info_dict[value] = tag_json.get(value) if var is None else var
-        
-        info_dict['data'] = self._process_data(tag_json['data'])
-        return info_dict
-
-    def _process_data(self, _data: List) -> List[Union[str, int, float]]:
-        output_data = []
-        for row in _data:
-            output_data.append(self._process_row(row))
-        return output_data
-
-    def _process_row(self, _row) -> List[Union[str, int, float]]:
-        """Process the individual row
-
-        Args:
-            _row ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
-        return [_row['time'], _row['source'], _row['value']]

@@ -21,14 +21,11 @@ def extract_tags_from_url(url):
     tag_classes = [_parse_tag(_.split(":")) for _ in tags]
 
 
-    result = json.dumps(
-        {
+    result = {
             "start": st,
             "end": et,
             "tags": [dict(_) for _ in tag_classes]
-        },
-        indent=4
-    )
+        }
 
     return result
 

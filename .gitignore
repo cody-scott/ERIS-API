@@ -15,3 +15,5 @@ request_eris.py
 **build/
 **dist/
 **.tk
+
+**dev/

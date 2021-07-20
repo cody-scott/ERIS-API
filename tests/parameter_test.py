@@ -3,6 +3,7 @@ from ERIS_API import ERIS_API
 import unittest
 from unittest.mock import MagicMock, patch
 from uuid import UUID
+from ERIS_API.ERIS_Parameters import ERISRequest, ERISTag
 
 class TestERISTag(unittest.TestCase):
     _norm_uuid = MagicMock(return_value=UUID('f2a8f445-45f9-4608-a9a3-5c1fa9fcbe7b'))
@@ -10,13 +11,13 @@ class TestERISTag(unittest.TestCase):
     def _get_actual_uuid(self):
         return str(self._norm_uuid.return_value).replace("-","")
 
-    @patch('ERIS_API.ERIS_API.uuid4', new=_norm_uuid)
+    @patch('ERIS_API.ERIS_Parameters.uuid4', new=_norm_uuid)
     def test_uuid(self):
         _actual = self._get_actual_uuid()
         _tag = ERIS_API.ERISTag("lbl","tag","mode","interval")
         self.assertEqual(_tag.request_uuid, _actual)
 
-    @patch('ERIS_API.ERIS_API.uuid4', new=_norm_uuid)
+    @patch('ERIS_API.ERIS_Parameters.uuid4', new=_norm_uuid)
     def test_valid_params_all(self):       
         _actual_uuid = self._get_actual_uuid()
         _actual_label = 'lbl'
@@ -31,14 +32,14 @@ class TestERISTag(unittest.TestCase):
         self.assertEqual(_tag.interval, _actual_interval)
         self.assertEqual(_tag.request_uuid, _actual_uuid)
 
-    @patch('ERIS_API.ERIS_API.uuid4', new=_norm_uuid)
+    @patch('ERIS_API.ERIS_Parameters.uuid4', new=_norm_uuid)
     def test_valid_params_no_label(self):       
         _actual_uuid = self._get_actual_uuid()
         _actual_tag = 'tag'
         _actual_mode = 'mode'
         _actual_interval = 'interval'
 
-        _tag = ERIS_API.ERISTag(tag="tag",mode="mode",interval="interval")
+        _tag = ERISTag(tag="tag",mode="mode",interval="interval")
         self.assertEqual(_tag.label, None)
         self.assertEqual(_tag.tag, _actual_tag)
         self.assertEqual(_tag.mode, _actual_mode)
@@ -62,7 +63,7 @@ class TestERISTag(unittest.TestCase):
             _tag = ERIS_API.ERISTag(tag="a", mode="m")
         self.assertEqual(str(ae.exception), 'Must supply a tag, mode and interval')
 
-    @patch('ERIS_API.ERIS_API.uuid4', new=_norm_uuid)
+    @patch('ERIS_API.ERIS_Parameters.uuid4', new=_norm_uuid)
     def test_tag_to_string(self):
         _actual = self._get_actual_uuid()
         _valid = f"{_actual}:tag:mode:interval"

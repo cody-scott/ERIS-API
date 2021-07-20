@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tagDataset xmlns="http://www.eramosa.com/2011/eSCADAr/Tag" id="1b8ff61b-7ac0-41f6-88ba-04ae6307f8c9" start="2021-07-01T00:00:00" end="2021-07-02T00:00:00" generated="2021-07-20T16:48:20.157" requestor="" created="2021-07-20T16:48:20.157" expires="PT5M" progress="100" request="uid1:tag1,6b6845c4b57a4f7c8e587554e1062d53:tag2:first:P1D" query="[tag1|u, tag2:first:P1D]" tags="2" data="1" mappings="[]" complete="true" immediate="true">
+    <info type="status" key="uid1" tag="tag1|u" message="completed" progress="100"/>
+    <info type="exception" key="6b6845c4b57a4f7c8e587554e1062d53" tag="tag2:first:P1D"/>
+    <tag start="2021-07-01T00:00:00" end="2021-07-02T00:00:00" requestor="" provider="WATH">
+        <info type="timer">(00005d.02|http-nio-8080-exec-2|270.02ms) GET /tag/data?provider=WATH&amp;tag=name1V&amp;start=2021-07-01T00:00:00&amp;end=2021-07-02T00:00:00&amp;mode=periodTotal&amp;samples=P1D --&gt; data:1</info>
+        <tagUID>uid1</tagUID>
+        <name>name1V</name>
+        <description>description 1</description>
+        <engUnits>m3</engUnits>
+        <sampleInterval>P1D</sampleInterval>
+        <samplingMode>periodTotal:P1D</samplingMode>
+        <data time="2021-07-01T00:00:00" value="1861" initialValue="" quality="100" source="tag1" flags="" annotations="" limit="" colour="" operator=""/>
+    </tag>
+    <tag>
+        <info type="exception"/>
+    </tag>
+</tagDataset>

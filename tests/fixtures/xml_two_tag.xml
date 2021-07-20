@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tagDataset xmlns="http://www.eramosa.com/2011/eSCADAr/Tag" id="1ebe2aca-6cc2-46bd-98c0-1c9441536914" start="2021-07-19T00:00:00" end="2021-07-20T00:00:00" generated="2021-07-20T12:35:09.083" requestor="" created="2021-07-20T12:35:09.083" expires="PT15M" progress="100" request="uid1:tag1,uid2:tag2" query="[tag1|u, tag2|u]" tags="2" data="25" mappings="[]" complete="true" immediate="true">
+    <info type="status" key="uid1" tag="tag1|u" message="completed" progress="100"/>
+    <info type="status" key="uid2" tag="tag2|u" message="completed" progress="100"/>
+    <tag start="2021-07-19T00:00:00" end="2021-07-20T00:00:00" requestor="" provider="WATH">
+        <info type="timer">(003a70.00|http-nio-8080-exec-1|412.05ms) GET /tag/data?provider=WATH&amp;tag=name1&amp;start=2021-07-19T00:00:00&amp;end=2021-07-20T00:00:00&amp;mode=rawByTime&amp;samples=P1D --&gt; data:24</info>
+        <tagUID>uid1</tagUID>
+        <name>name1</name>
+        <description>description1</description>
+        <engUnits>m3</engUnits>
+        <sampleInterval>P1D</sampleInterval>
+        <samplingMode>rawByTime:P1D</samplingMode>
+        <data time="2021-07-19T00:00:00" value="2281768" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T01:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T02:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T03:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T04:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T05:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T06:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T07:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T08:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T09:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T10:00:00" value="2281797" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T11:00:00" value="2282070" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T12:00:00" value="2282373" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T13:00:00" value="2282426" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T14:00:00" value="2282426" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T15:00:00" value="2282426" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T16:00:00" value="2282426" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T17:00:00" value="2282426" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T18:00:00" value="2282426" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T19:00:00" value="2282491" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T20:00:00" value="2282802" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T21:00:00" value="2283105" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T22:00:00" value="2283110" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+        <data time="2021-07-19T23:00:00" value="2283110" initialValue="" quality="100" source="tag1" flags="" limit="" colour="" operator=""/>
+    </tag>
+    <tag start="2021-07-19T00:00:00" end="2021-07-20T00:00:00" requestor="" provider="WATH">
+        <info type="timer">(003a88.00|http-nio-8080-exec-9|412.46ms) GET /tag/data?provider=WATH&amp;tag=name2&amp;start=2021-07-19T00:00:00&amp;end=2021-07-20T00:00:00&amp;mode=first&amp;samples=P1D --&gt; data:1</info>
+        <tagUID>uid2</tagUID>
+        <name>name2</name>
+        <description>description2</description>
+        <engUnits>kPa</engUnits>
+        <sampleInterval>P1D</sampleInterval>
+        <samplingMode>first:P1D</samplingMode>
+        <data time="2021-07-19T00:00:00" value="586.881" initialValue="" quality="100" source="tag2" flags="" limit="" colour="" operator=""/>
+    </tag>
+</tagDataset>
