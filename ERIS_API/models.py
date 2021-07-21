@@ -1,8 +1,13 @@
 from typing import Any, Optional, Union, List, Dict
 from unittest.mock import Base
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, BaseSettings
 
 import datetime
+
+class Settings(BaseSettings):
+    eris_username: Optional[str] = None
+    eris_token: Optional[str] = None
+    eris_password: Optional[str]= None
 
 class ERISDataRow(BaseModel):
     timestamp: datetime.datetime = Field(alias='time')
@@ -19,6 +24,8 @@ class ERISData(BaseModel):
     data: Optional[List[ERISDataRow]] = None
     provider: Optional[str] = None
     eris_tag: Optional['ERISTag'] = None
+
+
 
 class RawERISDataRow(BaseModel):
     annotationText: Optional[List] = None

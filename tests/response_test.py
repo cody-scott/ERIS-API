@@ -53,9 +53,9 @@ class TestResponse(unittest.TestCase):
         mk.text = data
         return mk
 
-    def create_uuid(self):
-        for _ in ['uid1', 'uid2']:
-            yield MagicMock(return_value=_)
+    # def create_uuid(self):
+    #     for _ in ['uid1', 'uid2']:
+    #         yield MagicMock(return_value=_)
 
     @patch('ERIS_API.ERIS_Parameters.uuid4')
     def create_valid_params(self, mk):

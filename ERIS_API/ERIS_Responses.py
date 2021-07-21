@@ -8,19 +8,27 @@ import logging
 from typing import Optional, List, Dict, Union, Mapping, Any
 
 import requests
+from requests.models import requote_uri
 import xmltodict
 
-from ERIS_API import models
+from ERIS_API import ERIS_Parameters, models
 
 
-class _BaseResponse(object):
-    def __init__(self, requests_class) -> None:
+class ERISResponse(object):
+    def __init__(self, request_response: requests.Response, eris_parameters: ERIS_Parameters.ERISRequest, is_xml: bool) -> None:
         super().__init__()
-        self.tag_data = None
-        self.request = requests_class
 
-    def _match_tags(self, request_parameters):
-        eris_tags = request_parameters.tags
+        self.response_dict = None
+        self.raw_model = None
+        self.tag_data = None
+        self.tag_dataframes = []
+
+        self.response_class = request_response
+        self.is_xml = is_xml
+        self.eris_parameters = eris_parameters
+
+    def _match_tags(self):
+        eris_tags = self.eris_parameters.tags
         for tag in self.tag_data:
             tag.eris_tag = self._match_tag(eris_tags, tag)
     
@@ -30,35 +38,30 @@ class _BaseResponse(object):
                 return e_tag
         return None
 
-class XMLResponse(_BaseResponse):
-    """XML Response object from an eris query.
+    def process_results(self):
+        try:
+            data_obj = self.parse_data()
+            result_data = self.load_model(data_obj)
+            self._match_tags()
+            return self.tag_data
+        except:
+            logging.exception("Error processing results. Partial results may be available in class parameters")
 
-    Flow is intiate response, process the response.
+    def parse_data(self) -> Dict:
+        """this converts the request to the valid json"""
+        data_obj = None
+        if self.is_xml:
+            data_obj = self._parse_xml(self.response_class.text)
+        else:
+            data_obj = self._parse_json(self.response_class.json())
+        self.response_dict = data_obj
+        return self.response_dict
 
-    Processed response can either be exported to a dataframe(s) or kept as the dictionary
+    def _parse_json(self, response_content: Dict) -> Dict:
+        return response_content
 
-    Args:
-        object ([type]): [description]
-    """
-    def __init__(self, requests_class, request_parameters) -> None:
-        """Init the class with the provided response content.
-
-        Args:
-            response_content ([type]): [description]
-        """
-        super().__init__(requests_class)
-        self.tag_data = None
-        self.response_content = requests_class.text
-        self.request_parameters = request_parameters
-
-    def process_data(self) -> None:
-        self._process_response()
-        self._match_tags(self.request_parameters)
-
-        return self.tag_data
-
-    def _process_response(self) -> List[models.ERISData]:
-        tag_tree = xmltodict.parse(self.response_content, attr_prefix="")
+    def _parse_xml(self, response_content: str) -> Dict:
+        tag_tree = xmltodict.parse(response_content, attr_prefix="")
         if not 'tagDataset' in tag_tree:
             logging.warning("No tagDataset found in response")
             return
@@ -77,55 +80,15 @@ class XMLResponse(_BaseResponse):
                 _['data'] = [_['data']]
             tag_data.append(_)
         tag_tree['tag'] = tag_data
+        return tag_tree
 
-        tag_model = models.RawERISResponse(**tag_tree)
-
+    def load_model(self, data_obj) -> List[models.ERISData]:
+        tag_model = models.RawERISResponse(**data_obj)
         self.raw_model = tag_model
         self.tag_data = [models.ERISData(**tag.dict()) for tag in tag_model.tags]
         return self.tag_data
 
-class JSONResponse(_BaseResponse):
-    def __init__(self, requests_class: requests.Response, request_parameters) -> None:
-        """Init the class with the provided response content.
-
-        Args:
-            response_content ([type]): [description]
-        """
-        super().__init__(requests_class)
-        self.tag_data = None
-        self.response_content = requests_class.json()
-        self.request_parameters = request_parameters
-
-    def process_data(self) -> None:
-        self._process_response()
-        self._match_tags(self.request_parameters)
-
-        return self.tag_data
-
-    def _process_response(self) -> List[models.ERISData]:
-        tag_model = models.RawERISResponse(**self.response_content)
-        if len(tag_model.tags) == 0:
-            logging.warning("No data in eris tag response")
-            return
-        
-        self.raw_model = tag_model
-        self.tag_data = [models.ERISData(**tag.dict()) for tag in tag_model.tags]
-
-        return self.tag_data
-
-class ERISResponse(object):
-    def __init__(self, type_response_class: Union[JSONResponse, XMLResponse]) -> None:
-        super().__init__()
-        self.tag_data = type_response_class.tag_data
-        self.response_class = type_response_class
-        self.response_content = self.response_class.response_content
-        self.tag_dataframes = []
-
-    def to_json(self, indent=None) -> str:
-        indent = 4 if indent is None else indent
-        return json.dumps(self.tag_data, indent=indent)
-
-    def convert_tags_to_dataframes(self, concat=None, parse_datetime=None, parse_values=None) -> pd.DataFrame:
+    def convert_tags_to_dataframes(self, concat=None) -> pd.DataFrame:
         """Convert all internal tag data to individual data frames
 
         If concat is True, then it will concatenate it to a single dataframe as the return.
