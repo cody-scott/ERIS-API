@@ -200,34 +200,3 @@ class ERISResponse(object):
 
         self.tag_dataframes.append(df)
         return df
-
-    def _parse_timestamp(self, df) -> pd.DataFrame:
-        """Attempt to parse the Timestamp field to a pandas timestamp object
-
-        Args:
-            df (pandas.DataFrame): dataframe of the tag to parse
-
-        Returns:
-            pandas.DataFrame: data frame of parsed format, or original if error
-        """
-        try:
-            df['Timestamp'] = pd.to_datetime(df['Timestamp'],format="%Y-%m-%dT%H:%M:%S")
-            df['Timestamp'] = df['Timestamp'].dt.round("S")
-            return df
-        except Exception as e:
-            logging.warning(f"Error parsing timestamp. Field left as is. {e}")
-        
-    def _parse_values(self, df) -> pd.DataFrame:
-        """Attempt to parse the Value field to a pandas numeric type
-
-        Args:
-            df (pandas.DataFrame): dataframe of the tag to parse
-
-        Returns:
-            pandas.DataFrame: data frame of parsed format, or original if error
-        """
-        try:
-            df['Value'] = pd.to_numeric(df['Value'])
-            return df
-        except Exception as e:
-            logging.warning(f"Error parsing Value. Field left as is. {e}")

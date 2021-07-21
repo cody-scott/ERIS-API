@@ -8,8 +8,10 @@ import base64
 from uuid import uuid4
 
 from .ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
+from .ERIS_Parameters import ERISRequest, ERISTag
 
 from typing import Optional, Dict, List, Union
+
 
 class _Token_Auth(requests.auth.AuthBase):
     """Subclass request auth for token authorization"""
@@ -25,8 +27,6 @@ class _Token_Auth(requests.auth.AuthBase):
         authstr = 'Token ' + _encoded.decode()
         r.headers['Authorization'] = authstr
         return r
-
-from .ERIS_Parameters import ERISRequest, ERISTag
 
 
 class ERISAPI(object):

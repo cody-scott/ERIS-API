@@ -3,6 +3,7 @@ import datetime
 
 from uuid import uuid4
 
+
 class ERISTag(object):
     def __init__(self, label: Optional[str]=None, tag: Optional[str]=None, mode: Optional[str]=None, interval: Optional[str]=None) -> None:
         """Init the tag class
