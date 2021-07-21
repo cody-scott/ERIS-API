@@ -7,10 +7,13 @@ import base64
 
 from uuid import uuid4
 
-from .ERIS_Responses import XMLResponse, JSONResponse, ERISResponse
+from .ERIS_Responses import ERISResponse
 from .ERIS_Parameters import ERISRequest, ERISTag
+from .models import Settings
 
-from typing import Optional, Dict, List, Union
+config_settings = Settings()
+
+from typing import Optional, Dict, List, Union, final
 
 
 class _Token_Auth(requests.auth.AuthBase):
@@ -30,10 +33,12 @@ class _Token_Auth(requests.auth.AuthBase):
 
 
 class ERISAPI(object):
-    def __init__(self, base_url: str, client_id: str, username: str, password: Optional[str]=None, token: Optional[str]=None, timeout: Optional[int]=None):
+    def __init__(self, base_url: str, client_id: str, username: Optional[str]=None, password: Optional[str]=None, token: Optional[str]=None, timeout: Optional[int]=None):
         """ERIS Api class. 
         
         Handles the authentication, and parsing of the supplied ERISRequest.
+
+        If you have the environment variables set for the values eris_username, eris_token and eris_password, then it will be loaded automatically
 
         Args:
             base_url (str): URL of the ERIS page.
@@ -62,9 +67,9 @@ class ERISAPI(object):
         self.access_token = None
         self.client_id = client_id
 
-        self.username = username
-        self.password = password
-        self.login_token = token
+        self.username = username if username is not None else config_settings.eris_username
+        self.password = password if password is not None else config_settings.eris_password
+        self.login_token = token if token is not None else config_settings.eris_token
 
         assert any([_ is not None for _ in [self.login_token, self.password]]), "password or token must be supplied"
 
@@ -142,32 +147,32 @@ class ERISAPI(object):
         Returns:
             dict: json result of the request as a dictionary
         """
-        _error_response = None
+        eris_response = None
         try:
-            uri = self.data_url
+            uri = self.base_api_url + self.data_url
             params = self._construct_request_parameters(request_parameters)
             result = self.request_data(uri, params)
 
-            _error_response = result
+            eris_response = result
 
             assert result.status_code == 200, "Failed to reach API"
-            _type_response = JSONResponse(result, request_parameters)
-
-            _error_response = _type_response
-
-            _type_response.process_data()
-            return ERISResponse(
-                _type_response
+            eris_response = ERISResponse(
+                result, request_parameters, False
             )
+            eris_response.process_results()
+
+            return eris_response
         except Exception as e:
             logging.error(e)
-            return _error_response
+        finally:
+            return eris_response
+
 
     def request_esrm_data(self, request_parameters: ERISRequest) -> ERISResponse:
         """Requesting via the ESRM url
         requires API input dictionary and returns the XML content
         """
-        _error_response = None
+        eris_response = None
         try:
             params = self._construct_request_parameters(request_parameters)
             uri = self.base_esrm_url + self.data_url
@@ -176,23 +181,24 @@ class ERISAPI(object):
                 params=params, 
                 timeout=self.timeout,
             )
-            _error_response = result
+            eris_response = result
 
             assert result.status_code == 200, "Status Code failed"
-            _type_response = XMLResponse(result, request_parameters)
 
-            _error_response = _type_response
-            _type_response.process_data()
-            return ERISResponse(
-                _type_response
+            eris_response = ERISResponse(
+                result, request_parameters, True
             )
+            eris_response.process_results()
+
+            return eris_response
 
         except Exception as e:
             logging.error(e)
-            return _error_response
+        finally:
+            return eris_response
             
 
-    def request_data(self, data_url: str, request_parameters: Optional[ERISRequest]=None):
+    def request_data(self, request_url: str, request_parameters: Optional[ERISRequest]=None):
         """Generic request. 
         Intended use is to provide the authenticated request to any eris endpoint.
         It is essentially the request.get with the eris authentication step added in.
@@ -206,11 +212,10 @@ class ERISAPI(object):
         Returns:
             request.Response: Response class from the request library.
         """
-        _url = self.base_api_url + self.data_url
         access_token = self.get_access_token()
         params = request_parameters if request_parameters is not None else None
         result = requests.get(
-            _url, 
+            request_url, 
             params=params, 
             timeout=self.timeout,
             headers={
