@@ -13,7 +13,7 @@ from .models import Settings
 
 config_settings = Settings()
 
-from typing import Optional, Dict, List, Union, final
+from typing import Optional, Dict, Union
 
 
 class _Token_Auth(requests.auth.AuthBase):
