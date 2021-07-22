@@ -4,15 +4,18 @@ from pydantic import BaseModel, Field, BaseSettings
 
 import datetime
 
+
 class Settings(BaseSettings):
     eris_username: Optional[str] = None
     eris_token: Optional[str] = None
     eris_password: Optional[str]= None
 
+
 class ERISDataRow(BaseModel):
     timestamp: datetime.datetime = Field(alias='time')
     tag: str = Field(alias='source')
     value: Union[float, int] = Field(alias='value')
+
 
 class ERISData(BaseModel):
     tagUID: Optional[str] = None
@@ -24,7 +27,6 @@ class ERISData(BaseModel):
     data: Optional[List[ERISDataRow]] = None
     provider: Optional[str] = None
     eris_tag: Optional['ERISTag'] = None
-
 
 
 class RawERISDataRow(BaseModel):
@@ -49,6 +51,7 @@ class RawERISDataRow(BaseModel):
     reviewed: Optional[bool] = None
     final: Optional[bool] = None
 
+
 class RawERISTag(BaseModel):
     tagUID: Optional[str] = None
     name: Optional[str] = None
@@ -65,6 +68,7 @@ class RawERISTag(BaseModel):
     provider: Optional[str] = None
     cacheable: Optional[bool] = None
     inputType: Optional[str] = None
+
 
 class RawERISResponse(BaseModel):
     tags: List[RawERISTag] = Field(alias='tag')

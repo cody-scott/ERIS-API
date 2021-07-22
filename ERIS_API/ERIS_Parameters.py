@@ -22,8 +22,8 @@ class ERISTag(object):
         """
         assert all([_ is not None for _ in [tag, mode, interval]]), "Must supply a tag, mode and interval"
         
-        self.rr = uuid4()
-        self.request_uuid = str(self.rr).replace("-","")
+        rr = uuid4()
+        self.request_uuid = str(rr).replace("-","")
         self.label = label
         self.tag = tag
         self.mode = mode
@@ -52,6 +52,10 @@ class ERISTag(object):
         for key, val in zip_list:
             yield (key, val)
 
+    # def __dict__(self) -> Dict[str, str]:
+    #     tag_r = {__[0]:__[1] for __ in _}
+    #     tag_r["request_uuid"] = self.request_uuid
+    #     return tag_r
 
 class ERISRequest(object):
     def __init__(self, start_time: Union[datetime.datetime, str], end_time: Union[datetime.datetime, str], tags: List[ERISTag], regex: Optional[bool] =None, compact: Optional[bool]=None) -> None:

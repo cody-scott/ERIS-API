@@ -1,5 +1,10 @@
+from ERIS_API.ERIS_Parameters import ERISRequest
+from ERIS_API.ERIS_Responses import ERISResponse
 from urllib.parse import urlparse, unquote, parse_qs
 from .ERIS_API import ERISTag
+
+from typing import Dict, Optional
+from pathlib import Path
 
 import json
 
@@ -87,3 +92,56 @@ def _load_json(_path):
     with open(_path, 'r') as fl:
         _data = json.loads(fl.read())
     return _data
+
+
+def export_eris_response(response: ERISResponse, path: Optional[str] = None):
+    """Helper to export the response from the ERIS API.
+    This will export the stages of the ERISResponse to a series of files for debug.
+
+    These include:
+        - The raw response from the API
+        - The parsed JSON response
+        - The RawERISResponse
+        - The ERISData
+        - The ERISRequest
+
+    Args:
+        response (ERISResponse): response from the ERIS API.
+        path (str, optional): path of folder to save the files. Defaults to None.
+    """
+    path = "" if path is None else path
+    path = Path(path)
+
+    _save_file(path/'request_response.txt', response.response_class.text)
+    _save_eris_request(path, response.eris_parameters)
+    _save_data_dict(path, response.response_dict)
+    _save_raw_model(path, response)
+    _save_tag_data(path, response)
+
+
+def _save_data_dict(path: Path, data: Dict):
+    _save_json(path/"parsed_data.json", data)
+
+
+def _save_eris_request(path: Path, eris_request: ERISRequest):
+    data = vars(eris_request)
+    data['tags'] = [vars(_) for _ in data['tags']]
+    _save_json(path/'eris_request.json', data)
+
+
+def _save_raw_model(path: Path, request):
+    _save_json(path/'raw_model.json', request.raw_model.dict())
+
+
+def _save_tag_data(path: Path, request: ERISResponse):
+    _save_json(path/"tag_data.json", [_.dict() for _ in request.tag_data])
+
+
+def _save_json(path: Path, data: Dict):
+    data = json.dumps(data, indent=4, default=str)
+    _save_file(path, data)
+
+
+def _save_file(_path, _data):
+    with open(_path, 'w') as fl:
+        fl.write(_data)

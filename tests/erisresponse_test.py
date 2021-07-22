@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from ERIS_API.ERIS_Parameters import ERISRequest, ERISTag
+from ERIS_API import utils
 from ERIS_API import ERIS_Responses
 
 from datetime import datetime
@@ -11,6 +12,8 @@ from pathlib import Path
 import json
 
 from uuid import UUID
+
+from pathlib import Path
 
 import logging
 
@@ -197,3 +200,11 @@ class ERISResponse(unittest.TestCase):
             self.assertEqual(isinstance(er_class.response_dict, dict), True)
             self.assertEqual(er_class.raw_model, None)
             self.assertEqual(er_class.tag_data, None)
+
+    def test_save_eris_request(self):
+        er_class = self.setup_ERIS_Response(self.json_fixture_path, False)
+        er_res = er_class.process_results()
+
+        with patch.object(utils, '_save_file') as mock_method:
+            utils._save_eris_request(Path(), er_class.eris_parameters)
+            self.assertEqual(mock_method.call_count, 1)

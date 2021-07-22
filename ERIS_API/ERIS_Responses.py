@@ -18,14 +18,16 @@ class ERISResponse(object):
     def __init__(self, request_response: requests.Response, eris_parameters: ERIS_Parameters.ERISRequest, is_xml: bool) -> None:
         super().__init__()
 
+        self.response_class = request_response
+        self.is_xml = is_xml
+        self.eris_parameters = eris_parameters
+        
         self.response_dict = None
         self.raw_model = None
         self.tag_data = None
         self.tag_dataframes = []
 
-        self.response_class = request_response
-        self.is_xml = is_xml
-        self.eris_parameters = eris_parameters
+
 
     def _match_tags(self):
         eris_tags = self.eris_parameters.tags
