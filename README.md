@@ -22,6 +22,8 @@ Basic flow is as follows. Example is also below:
     1. Client ID
     1. Username
     1. Password or Token
+
+you may choose to omit the username/password/token if they are set in your environment variables as eris_username/etc.
     
 2. Build Tag list
     1. Each tag should be an instance of the `ERISTag` class
