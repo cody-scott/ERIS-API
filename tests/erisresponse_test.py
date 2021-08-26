@@ -206,5 +206,5 @@ class ERISResponse(unittest.TestCase):
         er_res = er_class.process_results()
 
         with patch.object(utils, '_save_file') as mock_method:
-            utils._save_eris_request(Path(), er_class.eris_parameters)
-            self.assertEqual(mock_method.call_count, 1)
+            utils.export_eris_response(er_class)
+            self.assertEqual(mock_method.call_count, 5)
