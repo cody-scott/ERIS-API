@@ -21,6 +21,7 @@ class ERISResponse(unittest.TestCase):
     json_fixture_path = Path("./tests/fixtures/json_response.json")
     json_error_fixture_path = Path("./tests/fixtures/json_response_error_one_tag.json")
     json_no_data_fixture_path = Path("./tests/fixtures/json_response_no_data.json")
+    json_blank_value = Path("./tests/fixtures/json_response blank value.json")
     xml_two_tags = Path('./tests/fixtures/xml_two_tag.xml')
     xml_one_tags = Path('./tests/fixtures/xml_one_tag.xml')
     xml_one_tags_one_data = Path('./tests/fixtures/xml_one_tag_one_data.xml')
@@ -92,7 +93,6 @@ class ERISResponse(unittest.TestCase):
         data_class = self.setup_ERIS_Response(self.xml_two_tags_one_day, True)
         res = data_class.process_results()
 
-        
         self.assertEqual(len(res), 2)
         
         self.assertEqual(len(res[0].data), 1)
@@ -131,6 +131,13 @@ class ERISResponse(unittest.TestCase):
 
         self.assertEqual(isinstance(res, dict), True)
         self.assertEqual(len(res['tag']), 2)
+
+    def test_json_response_missing_value(self):
+        """this tests to see that a missing value of blank is returned as None"""
+        data_class = self.setup_ERIS_Response(self.json_blank_value, False)
+        res =  data_class.process_results()
+        self.assertIsNone(res[0].data[0].value)
+        
 
     def test_xml_response(self):
         data_class = self.setup_ERIS_Response(self.xml_two_tags, True)

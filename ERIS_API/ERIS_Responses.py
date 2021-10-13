@@ -7,6 +7,8 @@ import logging
 
 from typing import Optional, List, Dict, Union, Mapping, Any
 
+from pydantic import ValidationError
+
 import requests
 from requests.models import requote_uri
 import xmltodict
@@ -46,6 +48,7 @@ class ERISResponse(object):
             result_data = self.load_model(data_obj)
             self._match_tags()
             return self.tag_data
+        
         except:
             logging.exception("Error processing results. Partial results may be available in class parameters")
 

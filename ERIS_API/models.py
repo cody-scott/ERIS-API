@@ -1,6 +1,7 @@
 from typing import Any, Optional, Union, List, Dict
 from unittest.mock import Base
 from pydantic import BaseModel, Field, BaseSettings
+from pydantic.validators import str_validator
 
 import datetime
 
@@ -11,10 +12,22 @@ class Settings(BaseSettings):
     eris_password: Optional[str]= None
 
 
+def empty_to_none(v: str) -> Optional[str]:
+    if v == '':
+        return None
+    return v
+
+class EmptyStrToNone(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield str_validator
+        yield empty_to_none
+
+
 class ERISDataRow(BaseModel):
     timestamp: datetime.datetime = Field(alias='time')
     tag: str = Field(alias='source')
-    value: Union[float, int] = Field(alias='value')
+    value: Union[float, int, EmptyStrToNone] = Field(alias='value')
 
 
 class ERISData(BaseModel):
@@ -33,7 +46,7 @@ class RawERISDataRow(BaseModel):
     annotationText: Optional[List] = None
     time: Optional[datetime.datetime] = None
     valueQualifier: Optional[str] = None
-    value: Optional[Union[float]] = None
+    value: Optional[Union[float, str]] = None
     initialValueQualifier: Optional[str] = None
     initialValue: Optional[Any] = None
     quality: Optional[Union[float]] = None
