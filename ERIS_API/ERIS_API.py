@@ -73,7 +73,7 @@ class ERISAPI(object):
 
         assert any([_ is not None for _ in [self.login_token, self.password]]), "password or token must be supplied"
 
-    def get_access_token(self) -> str:
+    def get_access_token(self, **kwargs) -> str:
         """Authenticate to ERIS and obtain an access token. 
 
         If token exists (aka a previous request) then the time is validated 
@@ -87,7 +87,8 @@ class ERISAPI(object):
         result = requests.post(
             auth_uri, 
             auth=self.build_auth(), 
-            headers={"x-client-id": self.client_id}
+            headers={"x-client-id": self.client_id},
+            **kwargs
         )
         
         assert result.status_code == 200, "Failed to reach authentication page"
@@ -134,7 +135,7 @@ class ERISAPI(object):
         is_valid = True if expire_time>check_time else False
         return is_valid
 
-    def request_api_data(self, request_parameters: ERISRequest) -> ERISResponse:
+    def request_api_data(self, request_parameters: ERISRequest, **kwargs) -> ERISResponse:
         """Request ERIS data via the API. Requires request parameters in the form of ERISResponse class.
         Args:
             request_parameters (
@@ -151,7 +152,7 @@ class ERISAPI(object):
         try:
             uri = self.base_api_url + self.data_url
             params = self._construct_request_parameters(request_parameters)
-            result = self.request_data(uri, params)
+            result = self.request_data(uri, params, **kwargs)
 
             eris_response = result
 
@@ -168,7 +169,7 @@ class ERISAPI(object):
             return eris_response
 
 
-    def request_esrm_data(self, request_parameters: ERISRequest) -> ERISResponse:
+    def request_esrm_data(self, request_parameters: ERISRequest, **kwargs) -> ERISResponse:
         """Requesting via the ESRM url
         requires API input dictionary and returns the XML content
         """
@@ -180,6 +181,7 @@ class ERISAPI(object):
                 uri, 
                 params=params, 
                 timeout=self.timeout,
+                **kwargs
             )
             eris_response = result
 
@@ -198,7 +200,7 @@ class ERISAPI(object):
             return eris_response
             
 
-    def request_data(self, request_url: str, request_parameters: Optional[ERISRequest]=None):
+    def request_data(self, request_url: str, request_parameters: Optional[ERISRequest]=None, **kwargs):
         """Generic request. 
         Intended use is to provide the authenticated request to any eris endpoint.
         It is essentially the request.get with the eris authentication step added in.
@@ -212,7 +214,7 @@ class ERISAPI(object):
         Returns:
             request.Response: Response class from the request library.
         """
-        access_token = self.get_access_token()
+        access_token = self.get_access_token(**kwargs)
         params = request_parameters if request_parameters is not None else None
         result = requests.get(
             request_url, 
@@ -221,7 +223,8 @@ class ERISAPI(object):
             headers={
                 "x-access-token": access_token,
                 "x-client-id": self.client_id
-            }
+            },
+            **kwargs
         )
 
         return result
