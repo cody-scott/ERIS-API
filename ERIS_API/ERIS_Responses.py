@@ -29,8 +29,6 @@ class ERISResponse(object):
         self.tag_data = None
         self.tag_dataframes = []
 
-
-
     def _match_tags(self):
         eris_tags = self.eris_parameters.tags
         for tag in self.tag_data:

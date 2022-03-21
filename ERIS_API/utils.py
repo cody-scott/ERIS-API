@@ -5,6 +5,7 @@ from .ERIS_API import ERISTag
 
 from typing import Dict, Optional
 from pathlib import Path
+import pandas as pd
 
 import json
 
@@ -145,3 +146,6 @@ def _save_json(path: Path, data: Dict):
 def _save_file(_path, _data):
     with open(_path, 'w') as fl:
         fl.write(_data)
+
+def combine_concurrent_results(result_set):
+    return pd.concat([_.convert_tags_to_dataframes() for _ in result_set])

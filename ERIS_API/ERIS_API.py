@@ -1,11 +1,13 @@
 from requests.auth import HTTPBasicAuth
 
+import pandas as pd
+
 import logging
 import requests
 import datetime
 import base64
+import concurrent.futures
 
-from uuid import uuid4
 
 from .ERIS_Responses import ERISResponse
 from .ERIS_Parameters import ERISRequest, ERISTag
@@ -99,8 +101,8 @@ class ERISAPI(object):
         assert _status == 200, f"status: {_status} - message: {_message}"
 
         _data = result_json.get('data', {})
-        self.token_contents = _data
-        return self.token_contents.get("x-access-token")
+        self.access_token = _data
+        return self.access_token.get("x-access-token")
 
     def build_auth(self) -> Union[_Token_Auth, requests.auth.HTTPBasicAuth]:
         """Construct the requests authorization class
@@ -168,7 +170,6 @@ class ERISAPI(object):
         finally:
             return eris_response
 
-
     def request_esrm_data(self, request_parameters: ERISRequest, **kwargs) -> ERISResponse:
         """Requesting via the ESRM url
         requires API input dictionary and returns the XML content
@@ -197,8 +198,7 @@ class ERISAPI(object):
         except Exception as e:
             logging.error(e)
         finally:
-            return eris_response
-            
+            return eris_response    
 
     def request_data(self, request_url: str, request_parameters: Optional[ERISRequest]=None, **kwargs):
         """Generic request. 
@@ -246,3 +246,77 @@ class ERISAPI(object):
             out_params['compact'] = tag_class.compact
 
         return out_params
+
+    def request_api_data_concurrent(self, request_parameters: Optional[ERISRequest]=None, **kwargs):
+        """Performs the request api data as a concurrent call.
+
+        Passing in a `delta` will set the daily window to perform the requests over. 
+        ie delta=7 will window over 7 days.
+
+        Returns a list of results which you should iterate and parse to a dataframe with .convert_tags_to_dataframes and pd.concat
+
+        Args:
+            request_parameters (Optional[ERISRequest], optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        request_ranges = self._build_concurrent_requests(request_parameters, **kwargs)
+
+        self.get_access_token(**kwargs)
+
+        results = []
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        # Start the load operations and mark each future with its URL
+            future_to_url = {
+                executor.submit(self.request_api_data, date_range, **kwargs): date_range 
+                for date_range in request_ranges
+            }
+
+            for c, future in enumerate(concurrent.futures.as_completed(future_to_url), 1):
+                print(f'Requests Completed: {c} of {len(request_ranges)}')
+                url = future_to_url[future]
+                try:
+                    data = future.result()
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (url, exc))
+                else:
+                    results.append(data)
+        return results
+
+    def _build_concurrent_requests(self, request_parameters: ERISRequest, delta: Optional[int]=None, **kwargs):
+        date_ranges = self._generate_date_range(
+            request_parameters.start,
+            request_parameters.end,
+            delta
+        )
+
+        request_list = []
+        for _ in date_ranges:
+            _request = ERISRequest(
+                _[0],
+                _[1],
+                request_parameters.tags,
+                request_parameters.regex,
+                request_parameters.compact
+            )
+            request_list.append(_request)
+        return request_list
+
+    def _generate_date_range(self, start_date=None, end_date=None, delta=None):        
+        delta = 30 if delta is None else delta
+        date_ranges = []
+        while start_date < end_date:
+            date_ranges.append(
+                (
+                    start_date,
+                    min(
+                        start_date + datetime.timedelta(days=delta+1),
+                        end_date
+                    )
+                )
+            )
+            start_date += datetime.timedelta(days=delta)
+
+        return date_ranges

@@ -111,6 +111,28 @@ tag_df = result.convert_tags_to_dataframes(True)
 tag_dfs = result.convert_tags_to_dataframes(False) 
 ```
 
+## Concurrent Requests
+
+It is also possible to make the data requests concurrently.
+
+It follows the same api as above, but uses the `request_api_data_concurrent` function instead. Additional parameters of `delta` and `workers` is also accepted.
+
+* `delta`: specifies the window to apply to the concurrent requests in days. Default is 30 -> window of 30 days per-request
+* `workers`: number of workers to distribute the tasks to. Default is 8.
+
+concurrent request will return a list of `ERISResponses`. You should either iterate and call `convert_tags_to_dataframes` on each result, and then append to a dataframe with `pd.concat`, or use the `ERIS_API.combine_concurrent_results` function to combine the results
+
+```
+# continuing from above.
+result = api.request_api_data_concurrent(request_class, delta=7)
+
+df = api.combine_concurrent_results(result)
+
+```
+
+
+
+
 ## Generic Request
 
 To optionally pass a generic url to an eris endpoint use the `ERISAPI.request_data` function.
