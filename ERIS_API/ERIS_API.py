@@ -247,7 +247,7 @@ class ERISAPI(object):
 
         return out_params
 
-    def request_api_data_concurrent(self, request_parameters: Optional[ERISRequest]=None, **kwargs):
+    def request_api_data_concurrent(self, request_parameters: Optional[ERISRequest]=None, delta=None, **kwargs):
         """Performs the request api data as a concurrent call.
 
         Passing in a `delta` will set the daily window to perform the requests over. 
@@ -261,7 +261,7 @@ class ERISAPI(object):
         Returns:
             _type_: _description_
         """
-        request_ranges = self._build_concurrent_requests(request_parameters, **kwargs)
+        request_ranges = self._build_concurrent_requests(request_parameters, delta)
 
         self.get_access_token(**kwargs)
 
@@ -285,7 +285,7 @@ class ERISAPI(object):
                     results.append(data)
         return results
 
-    def _build_concurrent_requests(self, request_parameters: ERISRequest, delta: Optional[int]=None, **kwargs):
+    def _build_concurrent_requests(self, request_parameters: ERISRequest, delta: Optional[int]=None):
         date_ranges = self._generate_date_range(
             request_parameters.start,
             request_parameters.end,
