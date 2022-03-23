@@ -1,14 +1,20 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
+[tool.poetry]
+name = "ERIS-API"
+version = "1.5.0"
+description = ""
+authors = ["Cody Scott <jcodyscott+eris@gmail.com>"]
+license = "MIT"
+readme = "README.md"
 
-[project]
-requires = [
-    'requests > 0',
-    'pandas > 0',
-    'pydantic > 0',
-    'xmltodict > 0'
-]
+[tool.poetry.dependencies]
+python = "^3.6"
+requests = "^2.27.1"
+pandas = "^1.4.1"
+pydantic = "^1.9.0"
+xmltodict = "^0.12.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
